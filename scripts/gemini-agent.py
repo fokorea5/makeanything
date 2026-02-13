@@ -1,16 +1,25 @@
 #!/usr/bin/env python3
 """
 Gemini 서브에이전트 실행 스크립트
-비코딩 에이전트들을 Gemini API로 실행하여 토큰 비용을 절감합니다.
+텍스트 분석/기획 에이전트들을 Gemini API로 실행합니다.
+에이전트별 최적 모델이 자동 선택됩니다 (차등 배정).
 
 사용법:
   python3 scripts/gemini-agent.py --agent <에이전트번호> --request "<요청 내용>"
   python3 scripts/gemini-agent.py --agent 01 --request "할 일 관리 앱을 만들고 싶어"
   python3 scripts/gemini-agent.py --agent 02 --request "이 프로젝트의 비용을 분석해줘" --context "추가 컨텍스트"
+  python3 scripts/gemini-agent.py --agent 01 --request "..." --model gemini-2.5-pro  # 모델 수동 지정
+
+에이전트별 기본 모델:
+  01 (총괄 기획):    gemini-3-flash-preview  ($0.50/$3)
+  02 (경제성 검수):  gemini-2.5-flash        ($0.30/$2.50)
+  04 (UI 디자인):    gemini-2.5-flash        ($0.30/$2.50)
+  08 (외부 첩보):    gemini-2.0-flash        ($0.10/$0.40)
+  09 (수익화 설계):  gemini-2.5-flash        ($0.30/$2.50)
 
 환경변수:
   GEMINI_API_KEY: Gemini API 키 (필수)
-  GEMINI_MODEL: 사용할 모델 (기본: gemini-2.0-flash)
+  GEMINI_MODEL: 전체 기본 모델 오버라이드 (선택)
 """
 
 import argparse
@@ -20,19 +29,29 @@ import sys
 import urllib.request
 import urllib.error
 
-# Gemini로 실행할 에이전트 목록 (비코딩 역할)
+# Gemini로 실행할 에이전트 목록 (텍스트 분석/기획 역할)
 GEMINI_AGENTS = {
     "01": "01-orchestrator.md",
     "02": "02-economist.md",
     "04": "04-designer.md",
-    "07": "07-intent-auditor.md",
     "08": "08-intelligence.md",
     "09": "09-growth.md",
-    "10": "10-deployment.md",
 }
 
-# Claude로 실행해야 하는 에이전트 (코딩 역할)
-CLAUDE_AGENTS = {"03", "05", "06"}
+# 에이전트별 최적 Gemini 모델 매핑 (2026.02 기준)
+# 역할 중요도에 따라 차등 배정하여 비용 대비 품질 극대화
+AGENT_MODELS = {
+    "01": "gemini-3-flash-preview",  # 총괄 기획: Pro급 추론 필요 → 3 Flash ($0.50/$3)
+    "02": "gemini-2.5-flash",        # 경제성 검수: 분석력 필요 → 2.5 Flash ($0.30/$2.50)
+    "04": "gemini-2.5-flash",        # UI 디자이너: 디자인 명세 → 2.5 Flash ($0.30/$2.50)
+    "08": "gemini-2.0-flash",        # 외부 첩보: 정보 수집 → 2.0 Flash ($0.10/$0.40)
+    "09": "gemini-2.5-flash",        # 수익화 설계: 비즈니스 분석 → 2.5 Flash ($0.30/$2.50)
+}
+
+# Claude로 실행해야 하는 에이전트 (코드 접근/실행 필요)
+# Sonnet: 03(아키텍트), 05(개발자), 06(보안QA) — 코딩/설계/보안 분석
+# Haiku:  07(의도매칭), 10(배포) — 코드 검증/배포 실행
+CLAUDE_AGENTS = {"03", "05", "06", "07", "10"}
 
 
 def get_api_key():
@@ -72,8 +91,8 @@ def load_agent_prompt(agent_id):
         return f.read()
 
 
-def call_gemini(api_key, system_prompt, user_request, model=None):
-    model = model or os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
+def call_gemini(api_key, system_prompt, user_request, model=None, agent_id=None):
+    model = model or os.environ.get("GEMINI_MODEL") or AGENT_MODELS.get(agent_id, "gemini-2.0-flash")
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
 
     payload = {
@@ -116,10 +135,10 @@ def call_gemini(api_key, system_prompt, user_request, model=None):
 
 def main():
     parser = argparse.ArgumentParser(description="Gemini 서브에이전트 실행")
-    parser.add_argument("--agent", required=True, help="에이전트 번호 (01, 02, 04, 07, 08, 09, 10)")
+    parser.add_argument("--agent", required=True, help="에이전트 번호 (01, 02, 04, 08, 09)")
     parser.add_argument("--request", required=True, help="제작자의 요청 내용")
     parser.add_argument("--context", default="", help="추가 컨텍스트 (이전 단계 결과 등)")
-    parser.add_argument("--model", default=None, help="Gemini 모델 (기본: gemini-2.0-flash)")
+    parser.add_argument("--model", default=None, help="Gemini 모델 (미지정시 에이전트별 최적 모델 자동 선택)")
     args = parser.parse_args()
 
     api_key = get_api_key()
@@ -129,7 +148,7 @@ def main():
     if args.context:
         user_input += f"\n\n[이전 단계 결과/추가 정보]\n{args.context}"
 
-    result = call_gemini(api_key, system_prompt, user_input, args.model)
+    result = call_gemini(api_key, system_prompt, user_input, args.model, args.agent)
     print(result)
 
 
