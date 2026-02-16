@@ -19,6 +19,49 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 MOCK_DIR = os.path.join(os.path.dirname(__file__), "dryrun", "mock_project")
 PROMPTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "prompts")
+CLAUDE_MD = os.path.join(os.path.dirname(os.path.dirname(__file__)), "CLAUDE.md")
+
+
+class TestDryrun0_Bootstrap(unittest.TestCase):
+    """드라이런 0: 오케스트레이터 부트스트랩 검증."""
+
+    def setUp(self):
+        with open(CLAUDE_MD, "r", encoding="utf-8") as f:
+            self.content = f.read()
+
+    def test_has_orchestrator_role(self):
+        """메인 에이전트 역할이 명시되어 있는지."""
+        self.assertIn("오케스트레이터", self.content)
+
+    def test_has_activation_keywords(self):
+        """가동 조건 키워드가 있는지."""
+        for keyword in ["만들어", "개발해", "구현해"]:
+            self.assertIn(keyword, self.content)
+
+    def test_references_orchestrator_md(self):
+        """orchestrator.md 참조가 있는지."""
+        self.assertIn("prompts/agents/orchestrator.md", self.content)
+
+    def test_has_pdca_flow(self):
+        """PDCA 흐름이 명시되어 있는지."""
+        self.assertIn("DISCOVER", self.content)
+        self.assertIn("PLAN", self.content)
+        self.assertIn("CHECK", self.content)
+
+    def test_has_cell_differentiation(self):
+        """세포 분화(규모별 편성) 규칙이 있는지."""
+        self.assertIn("풀스택", self.content)
+        self.assertIn("API", self.content)
+        self.assertIn("스크립트", self.content)
+
+    def test_has_approval_flow(self):
+        """제작자 승인 흐름이 있는지."""
+        self.assertIn("승인", self.content)
+
+    def test_has_report_format(self):
+        """보고 양식이 있는지."""
+        self.assertIn("현재 단계", self.content)
+        self.assertIn("투입 에이전트", self.content)
 
 
 class TestDryrun1_ReportAndOwnership(unittest.TestCase):
