@@ -309,8 +309,8 @@ class TestDryrun5_DirectionVerification(unittest.TestCase):
         with open(path, "r", encoding="utf-8") as f:
             content = f.read()
 
-        self.assertIn(".plan.md 재읽기", content)
-        self.assertIn("사용자가 원한 것인가", content)
+        self.assertIn("사용자 원문", content)
+        self.assertIn("직접 비교", content)
 
     def test_plan_template_has_ac_format(self):
         """plan 템플릿에 AC 체크박스 형식이 있는지."""
@@ -371,6 +371,93 @@ class TestDryrun5_DirectionVerification(unittest.TestCase):
             orch_content = f.read()
         self.assertIn("auth", orch_content)
         self.assertIn("보안", orch_content)
+
+
+class TestDryrun6_V54Changes(unittest.TestCase):
+    """드라이런 6: v5.4 핵심 변경사항 검증."""
+
+    def test_qa_attacker_mindset(self):
+        """QA에 능동적 공격자 마인드셋이 있는지."""
+        path = os.path.join(PROMPTS_DIR, "agents", "qa.md")
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("공격자", content)
+        self.assertIn("실패하는 경우", content)
+        self.assertIn("실패하는 입력", content)
+
+    def test_qa_has_verification_steps(self):
+        """QA에 7단계 검증 순서가 있는지."""
+        path = os.path.join(PROMPTS_DIR, "agents", "qa.md")
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("검증 순서", content)
+        self.assertIn("테스트 작성", content)
+        self.assertIn("판정", content)
+
+    def test_debugger_root_cause(self):
+        """디버거에 근본 원인 분석이 있는지."""
+        path = os.path.join(PROMPTS_DIR, "agents", "debugger.md")
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("근본 원인", content)
+        self.assertIn("디버깅 순서", content)
+
+    def test_debugger_environment_separation(self):
+        """디버거에 환경 문제 구분이 있는지."""
+        path = os.path.join(PROMPTS_DIR, "agents", "debugger.md")
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("환경 문제", content)
+        self.assertIn("즉시 보고", content)
+
+    def test_orchestrator_model_assignment(self):
+        """오케스트레이터에 모델 배치 규칙이 있는지."""
+        path = os.path.join(PROMPTS_DIR, "agents", "orchestrator.md")
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("모델 배치", content)
+        self.assertIn("opus", content)
+        self.assertIn("sonnet", content)
+        self.assertIn("haiku", content)
+
+    def test_orchestrator_info_delivery(self):
+        """오케스트레이터에 정보 전달 원칙이 있는지."""
+        path = os.path.join(PROMPTS_DIR, "agents", "orchestrator.md")
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("정보 전달 원칙", content)
+        self.assertIn("DESIGN.md", content)
+
+    def test_security_checklist(self):
+        """보안 에이전트에 4관점 체크리스트가 있는지."""
+        path = os.path.join(PROMPTS_DIR, "agents", "security.md")
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("인증", content)
+        self.assertIn("입력", content)
+        self.assertIn("저장", content)
+        self.assertIn("노출", content)
+
+    def test_claude_md_has_reference_section(self):
+        """CLAUDE.md에 참조 파일 섹션이 있는지."""
+        with open(CLAUDE_MD, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("참조 파일", content)
+
+    def test_claude_md_freeze_description_v54(self):
+        """CLAUDE.md의 FREEZE 설명이 v5.4 형식인지."""
+        with open(CLAUDE_MD, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("코드 수정만으로 고칠 수 없고", content)
 
 
 if __name__ == "__main__":
