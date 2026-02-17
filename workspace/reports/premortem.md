@@ -1,29 +1,38 @@
-# Pre-mortem: Polymarket 자동매매 봇
+# Pre-mortem: Polymarket Reaper Bot v1.0
 
-## 실패 시나리오 1: Rate Limit 초과 → IP/API키 차단
-- 확률: 중 (6개 전략이 동시에 polling하면 100 req/분 초과 가능)
-- 영향: 봇 전체 정지, 포지션 관리 불가
-- 대응:
-  - 전략별 polling 주기 분배: 각 전략 10초 간격 = 총 ~60 req/분 (한도 내)
-  - 429 응답 시 지수 백오프 (2s, 4s, 8s)
-  - 마켓 데이터 캐싱 (동일 마켓 중복 요청 방지)
-  - Rate Limit 카운터 모니터링 로그
+## 실패 시나리오 1: WebSocket 연결 불안정으로 Whale Shadow/Liquidity Vacuum 무력화
+**위험도**: HIGH
+**원인**: Polymarket WebSocket 서버의 구독 해제 미지원, 연결 끊김 시 오더북 데이터 갭
+**영향**: 실시간 전략 2개(Whale Shadow, Liquidity Vacuum)가 stale 데이터로 잘못된 시그널 생성 → 손실
+**대응**:
+- 자동 재연결 + 지수 백오프 (최대 5회, 1s→2s→4s→8s→16s)
+- 연결 상태 heartbeat 모니터 (30초 무응답 → 재연결)
+- stale 판정 타임스탬프: 마지막 메시지 후 60초 경과 시 해당 전략 시그널 자동 비활성화
+- WebSocket 실패 시 REST 폴백으로 30초 주기 polling (degraded mode)
 
-## 실패 시나리오 2: L2 인증 서명 오류 → 주문 전체 실패
-- 확률: 중 (타임스탬프 드리프트, nonce 충돌)
-- 영향: 시그널은 발생하지만 주문 실행 불가
-- 대응:
-  - py-clob-client SDK 공식 인증 플로우 그대로 사용
-  - 주문 전 서명 검증 단계 추가
-  - NTP 동기화 또는 서버 시간 기준
-  - 인증 실패 시 자동 재인증 시도 (최대 3회)
+## 실패 시나리오 2: asyncio 동시성 경합으로 시그널 순서 역전 / 중복 주문
+**위험도**: HIGH
+**원인**: 10개 전략이 동시에 시그널 발행, Meta Brain과 Executor 간 race condition
+**영향**: 같은 시장에 중복 주문, 또는 outdated 시그널이 최신보다 먼저 실행
+**대응**:
+- Signal Queue에 timestamp + sequence_number로 엄격한 정렬
+- condition_id 기준 deduplication: 같은 시장에 60초 내 중복 시그널 무시
+- Executor에 asyncio.Lock() per condition_id: 한 시장에 동시 주문 방지
+- 모든 시그널에 TTL 부여 (Sniper: 10초, Patient: 120초), 만료된 시그널 자동 폐기
 
-## 실패 시나리오 3: 전략 시그널 과적합 → 연속 손실
-- 확률: 중-높 (백테스트 없이 실거래 시)
-- 영향: 자금 손실
-- 대응:
-  - 드라이런 모드 기본 탑재 → 최소 48시간 시뮬레이션 권장
-  - 포지션 크기 제한 (단일 거래 최대 자금의 5%)
-  - 포트폴리오 총 노출 한도 (자금의 50%)
-  - 일일 손실 한도 초과 시 자동 거래 중단
-  - 시그널 적중률 실시간 추적
+## 실패 시나리오 3: Rate Limit 초과로 API 차단 → 전략 polling 전면 마비
+**위험도**: MEDIUM
+**원인**: 10개 전략 × polling 주기가 100 req/min 공개 한도 초과, 429 연쇄 발생
+**영향**: 시장 데이터 갱신 불가 → stale 데이터로 시그널 생성 → 손실 또는 기회 상실
+**대응**:
+- 전략별 polling 주기 분산 스케줄링: jitter(±20%) 추가
+- Global rate limiter: asyncio.Semaphore + TokenBucket 알고리즘
+  - 공개 API: 최대 80 req/min (한도의 80%)
+  - 주문 API: 최대 45 orders/min (한도의 75%)
+- 429 응답 시 지수 백오프 + Retry-After 헤더 존중
+- WebSocket 데이터 우선 사용으로 REST 호출 최소화 (특히 오더북)
+
+## 추가 리스크 메모
+- **L2 서명 30초 만료**: 시그널→주문 파이프라인 지연 시 서명 만료 가능. 서명은 주문 직전에 생성.
+- **py-clob-client 동기 한계**: SDK가 동기 전용. async wrapper에서 `run_in_executor`로 감싸되, 서명/주문 호출만 해당. 순수 HTTP는 aiohttp 직접 사용.
+- **Complete Set 아비트라지**: neg_risk 마켓에서만 동작. neg_risk 필터 필수.
