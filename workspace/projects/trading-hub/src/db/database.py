@@ -180,9 +180,13 @@ async def update_bot_status(bot_id: int, status: str) -> Optional[Dict[str, Any]
 
 
 async def delete_bot(bot_id: int) -> bool:
-    """봇 삭제."""
+    """봇 삭제. 하위 레코드(trades, assets, alerts)를 먼저 삭제한 후 봇을 삭제한다."""
     conn = await get_connection()
     try:
+        # FK 제약 위반 방지: 하위 테이블의 관련 레코드를 먼저 삭제
+        await conn.execute("DELETE FROM trades WHERE bot_id = ?", (bot_id,))
+        await conn.execute("DELETE FROM assets WHERE bot_id = ?", (bot_id,))
+        await conn.execute("DELETE FROM alerts WHERE bot_id = ?", (bot_id,))
         cursor = await conn.execute("DELETE FROM bots WHERE id = ?", (bot_id,))
         await conn.commit()
         return cursor.rowcount > 0

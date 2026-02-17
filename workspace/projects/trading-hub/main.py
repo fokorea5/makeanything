@@ -161,10 +161,12 @@ app = FastAPI(
 )
 
 # CORS
+# NOTE: allow_origins=["*"]는 개발 환경 전용. 운영 배포 시 반드시 특정 도메인으로 제한할 것.
+# allow_credentials=True와 allow_origins=["*"]는 보안상 함께 사용하면 안 됨.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 개발 환경. 운영 시 특정 도메인으로 제한.
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

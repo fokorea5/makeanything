@@ -169,8 +169,9 @@ async def start_bot(bot_id: int) -> BotResponse:
     try:
         await bot_manager.start_bot(bot_id)
     except Exception as e:
+        logger.error("봇 시작 실패 (bot_id=%d): %s", bot_id, e)
         await db.update_bot_status(bot_id, BotStatus.error.value)
-        raise HTTPException(status_code=500, detail=f"봇 시작 실패: {str(e)}")
+        raise HTTPException(status_code=500, detail="봇 시작 중 내부 오류가 발생했습니다.")
 
     await db.update_bot_status(bot_id, BotStatus.running.value)
     updated = await db.get_bot(bot_id)
@@ -200,7 +201,8 @@ async def stop_bot(bot_id: int) -> BotResponse:
     try:
         await bot_manager.stop_bot(bot_id)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"봇 중지 실패: {str(e)}")
+        logger.error("봇 중지 실패 (bot_id=%d): %s", bot_id, e)
+        raise HTTPException(status_code=500, detail="봇 중지 중 내부 오류가 발생했습니다.")
 
     await db.update_bot_status(bot_id, BotStatus.stopped.value)
     updated = await db.get_bot(bot_id)

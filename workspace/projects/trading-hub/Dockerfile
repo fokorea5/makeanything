@@ -15,6 +15,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy source code
 COPY . .
 
+# non-root 사용자 생성 및 전환 (보안: 컨테이너를 root로 실행하지 않음)
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser \
+    && mkdir -p /app/data && chown -R appuser:appgroup /app
+USER appuser
+
 # Expose FastAPI port
 EXPOSE 8000
 
