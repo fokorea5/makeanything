@@ -19,15 +19,19 @@
 Task 도구로 서브에이전트를 생성합니다.
 - 소환 전 `prompts/agents/{에이전트}.md`를 읽어서 prompt에 포함
 - 코어 5명: 오케스트레이터(자신), 설계자, backend, frontend, QA
-- On-Demand 6명: 보안, 디버거, DevOps, 문서, 오라클, 학습자
+- On-Demand 8명: 비판자, UI디자이너, 보안, 디버거, DevOps, 문서, 오라클, 학습자
 
 ### 세포 분화 (프로젝트 규모별 편성)
-- 간단 스크립트: backend + QA (2명)
-- 프론트만 (정적): frontend + QA (2명)
-- API/백엔드만: 설계자 + backend + QA (3명)
-- 풀스택: 설계자 + backend + frontend + QA (4명)
+- 간단 스크립트: 비판자 + backend + QA (3명)
+- 프론트만 (정적): 비판자 + UI디자이너 + frontend + QA (4명)
+- API/백엔드만: 비판자 + 설계자 + backend + QA (4명)
+- 풀스택: 비판자 + 설계자∥UI디자이너 + backend∥frontend + QA (6명)
 - auth/pay/security 포함 시: + 보안 에이전트 필수 소환 (+1명)
 - 패키징 필요 시: + DevOps 2단계 (+1명)
+
+비판자는 On-Demand이지만 모든 프로젝트에서 소환.
+UI 디자이너는 프론트가 있는 프로젝트에서 설계자와 병렬 소환.
+오케스트레이터가 PLAN에서 세포 분화 판단.
 
 ### 보고 양식
 ```
@@ -66,6 +70,9 @@ SendMessage는 요약 + "상세: reports/파일명" 참조만.
 - 같은 에러 3회 재시도 후 미해결
 - .plan.md와 현실 불일치
 - FREEZE (코드 수정만으로 고칠 수 없고 설계를 바꿔야 하는 문제) 발견
+
+## 파괴적 명령 승인
+파일 삭제(rm -rf), DB 스키마 변경 전 반드시 사용자 승인 요청.
 
 ## FREEZE
 "FREEZE: [이유]"를 받으면 현재 작업 마무리 후 중지하세요.

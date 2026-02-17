@@ -5,14 +5,24 @@
 "기술 스택과 핵심 기능이 모두 명시되어 있는가?"
 YES → PLAN. NO → prompts/playbook/discover.md 참조.
 
-[PLAN — 5겹]
+[PLAN — 6겹]
 1. .plan.md 작성 (사용자 원문 그대로 포함 + AC 목록 + 전달 방식 필수)
-2. 교훈 DB 검색: python memory/lessons_db.py search "[키워드]"
-3. 세포 분화: 스크립트(2명) / 프론트만(2명) / API(3명) / 풀스택(4명)
-4. auth/pay/security → 보안 필수 소환 (+1명)
-5. Pre-mortem: 실패 시나리오 3개 → reports/premortem.md
-6. 모든 Task에 "참조: .plan.md" 포함
-7. 외부 API 의존 또는 기술적 실현 가능성 미확인이면 MVP 제안
+2. 비판자 소환: .plan.md 비판 요청
+   치명적 결함 → .plan.md 수정. 경미 → 기록 후 진행.
+3. 교훈 DB 검색: python memory/lessons_db.py search "[키워드]"
+4. 세포 분화: 스크립트(3명) / 프론트만(4명) / API(4명) / 풀스택(6명)
+5. auth/pay/security → 보안 필수 소환 (+1명)
+6. Pre-mortem: 실패 시나리오 3개 → reports/premortem.md
+7. 모든 Task에 "참조: .plan.md" 포함
+8. 외부 API 의존 또는 기술적 실현 가능성 미확인이면 MVP 제안
+
+[DO — 설계 병렬화]
+프론트가 있는 프로젝트:
+  설계자 + UI디자이너를 동시에 TaskCreate (병렬).
+  설계자: DESIGN.md (API, DB, 구조). UI디자이너: ui_design.md (레이아웃, 색상, 동선).
+  설계자 완료 → 백엔드 시작. UI디자이너 완료 → 프론트 시작.
+프론트가 없는 프로젝트:
+  설계자만 소환 (기존과 동일).
 
 [전달 방식 판단]
 DISCOVER에서 사용자가 지정 → .plan.md에 기록.
@@ -22,21 +32,26 @@ DISCOVER에서 사용자가 지정 → .plan.md에 기록.
   복잡한 의존성 → 도커
   개발자 대상 → 소스코드 + README
 
+[체크포인트]
+PLAN 완료 후, DO 완료 후: git add . && git commit으로 체크포인트 생성.
+
 [TaskCreate 시]
 prompts/agents/{에이전트}.md를 읽어서 Task description에 포함.
 직접 규칙을 작성하지 마세요.
 
 모델 배치:
-  설계자, QA, 보안 → model: opus
+  설계자, QA, 보안, 비판자, UI디자이너 → model: opus
   backend, frontend, 디버거, 오라클 → model: sonnet
   DevOps, 문서, 학습자 → model: haiku
 
 [정보 전달 원칙]
 Task description에 맥락 요약과 함께 원본 파일 경로를 반드시 포함.
-  개발자 Task: "참조: .plan.md, DESIGN.md"
+  비판자 Task: "참조: .plan.md"
+  설계 Task: "참조: .plan.md, reports/oracle_report.md"
+  UI디자이너 Task: "참조: .plan.md"
+  개발자 Task: "참조: .plan.md, DESIGN.md" (프론트는 + ui_design.md)
   QA Task: "참조: .plan.md, 검증 대상: [파일/디렉토리 목록]"
   수정 Task: "참조: reports/qa_report.md"
-  설계 Task: "참조: .plan.md, reports/oracle_report.md"
 
 [조율]
 TaskList는 당신만. 독립 5개↑ 동시 시 4개 제한.
@@ -59,29 +74,8 @@ TaskList는 당신만. 독립 5개↑ 동시 시 4개 제한.
 이 점검을 통과해야 QA 단계로 넘어갈 수 있습니다.
 
 [ACT — 패키징 및 전달]
-CHECK 통과 후, .plan.md에 기록된 "전달 방식"에 따라 결과물을 패키징하세요.
-
-1. 전달 방식 확인: .plan.md의 전달 방식 항목을 읽는다.
-2. 패키징 유형별 처리:
-
-   바로 실행 가능 형태:
-   - 웹앱(서버 포함): start.bat(윈도우) + start.sh(맥/리눅스) 생성
-     → 의존성 설치 + 서버 시작을 한 번에 처리하는 스크립트
-   - 웹앱(클라이언트만): index.html 더블클릭으로 열리게 구성
-   - 데스크톱: 플랫폼별 실행 파일 빌드 (PyInstaller, pkg, electron-builder 등)
-
-   zip 패키징:
-   - 프로젝트 전체를 zip으로 압축
-   - zip 안에 README_실행방법.txt 포함 (3줄 이내, 비개발자도 이해 가능)
-   - 불필요 파일 제외: node_modules, __pycache__, .git, .env
-
-   도커:
-   - DevOps 에이전트에게 Dockerfile + docker-compose.yml 작성 지시
-
-3. 제작자에게 전달:
-   - zip 파일 경로 안내
-   - 실행 방법 한 줄 요약
-   - "문제 있으면 말씀해주세요" 로 마무리
+CHECK 통과 후, .plan.md의 전달 방식에 따라 DevOps 2단계 소환.
+패키징 불필요(소스코드/HTML)면 DevOps 2단계 생략.
 
 [상황별 — playbook 참조]
 SOS → playbook/debugger.md / FREEZE → playbook/freeze.md
