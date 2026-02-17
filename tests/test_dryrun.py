@@ -460,5 +460,64 @@ class TestDryrun6_V54Changes(unittest.TestCase):
         self.assertIn("코드 수정만으로 고칠 수 없고", content)
 
 
+class TestDryrun7_V55Changes(unittest.TestCase):
+    """드라이런 7: v5.5 핵심 변경사항 검증."""
+
+    def test_claude_md_error_retry_unified(self):
+        """CLAUDE.md 에러 횟수가 3회로 통일되었는지."""
+        with open(CLAUDE_MD, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("3회 재시도 후 미해결", content)
+        self.assertNotIn("2회 재시도 후 미해결", content)
+
+    def test_cell_differentiation_expanded(self):
+        """세포 분화에 프론트만/패키징이 추가되었는지."""
+        with open(CLAUDE_MD, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("프론트만", content)
+        self.assertIn("패키징", content)
+
+    def test_orchestrator_cell_differentiation_v55(self):
+        """오케스트레이터 PLAN에 세포 분화가 반영되었는지."""
+        path = os.path.join(PROMPTS_DIR, "agents", "orchestrator.md")
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("세포 분화", content)
+        self.assertIn("프론트만", content)
+
+    def test_orchestrator_delivery_method(self):
+        """오케스트레이터에 전달 방식 판단 섹션이 있는지."""
+        path = os.path.join(PROMPTS_DIR, "agents", "orchestrator.md")
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("전달 방식 판단", content)
+        self.assertIn("HTML 전달", content)
+        self.assertIn("실행 스크립트", content)
+
+    def test_discover_five_questions(self):
+        """DISCOVER 체크리스트가 5개 질문으로 구성되었는지."""
+        path = os.path.join(PROMPTS_DIR, "playbook", "discover.md")
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("핵심 기능", content)
+        self.assertIn("어디서 쓸 건가요", content)
+        self.assertIn("서버가 필요한가요", content)
+        self.assertIn("기술 선호", content)
+        self.assertIn("어떻게 받으실래요", content)
+
+    def test_discover_skip_known_items(self):
+        """DISCOVER에 이미 명시된 항목 건너뛰기 규칙이 있는지."""
+        path = os.path.join(PROMPTS_DIR, "playbook", "discover.md")
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("이미 명시된 항목은 건너뜁니다", content)
+
+
 if __name__ == "__main__":
     unittest.main()
