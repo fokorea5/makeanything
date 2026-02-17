@@ -208,9 +208,9 @@ if static_dir.exists():
 @app.get("/", include_in_schema=False)
 async def root():
     """루트 → 대시보드 리다이렉트."""
-    dashboard_path = pages_dir / "dashboard.html"
-    if dashboard_path.exists():
-        return RedirectResponse(url="/pages/dashboard.html")
+    index_path = pages_dir / "index.html"
+    if index_path.exists():
+        return RedirectResponse(url="/pages/index.html")
     return {"message": "Trading Hub API is running. Visit /docs for API documentation."}
 
 
