@@ -132,6 +132,7 @@ class TradingEngine:
             try:
                 from src.api.clob_client import AsyncClobClient
                 self.clob_client = AsyncClobClient()
+                await self.clob_client.init()
             except ImportError:
                 logger.warning("AsyncClobClient not available")
 
@@ -139,6 +140,7 @@ class TradingEngine:
             try:
                 from src.api.gamma_client import AsyncGammaClient
                 self.gamma_client = AsyncGammaClient()
+                await self.gamma_client.init()
             except ImportError:
                 logger.warning("AsyncGammaClient not available")
 
@@ -146,6 +148,7 @@ class TradingEngine:
             try:
                 from src.api.data_client import AsyncDataClient
                 self.data_client = AsyncDataClient()
+                await self.data_client.init()
             except ImportError:
                 logger.warning("AsyncDataClient not available")
 
@@ -902,6 +905,18 @@ class TradingEngine:
             await asyncio.wait_for(asyncio.sleep(0.1), timeout=10)
         except (asyncio.TimeoutError, asyncio.CancelledError):
             pass
+
+        # API 클라이언트 종료
+        for name, client in [
+            ("GammaClient", self.gamma_client),
+            ("DataClient", self.data_client),
+            ("ClobClient", self.clob_client),
+        ]:
+            if client is not None and hasattr(client, "close"):
+                try:
+                    await client.close()
+                except Exception as e:
+                    logger.warning("%s close error: %s", name, e)
 
         # WebSocket 연결 종료
         if self.ws_manager is not None:
