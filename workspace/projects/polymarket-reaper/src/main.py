@@ -46,7 +46,8 @@ def _setup_logging(config: Config) -> None:
 async def main() -> None:
     """메인 비동기 함수."""
     # Config 로드 (AC-05)
-    config = Config()
+    Config.load()
+    config = Config
 
     # 로깅 설정 (AC-37)
     _setup_logging(config)

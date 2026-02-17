@@ -223,6 +223,7 @@ class DBManager:
                     signal.side.value,
                     signal.confidence,
                     str(signal.urgency.value),
+                    signal.price_at_signal,
                     json.dumps(signal.metadata) if signal.metadata else None,
                     signal.expires_at.isoformat(),
                 ),

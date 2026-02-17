@@ -130,43 +130,43 @@ class TradingEngine:
         # API 클라이언트 (외부에서 주입되지 않았으면 import 시도)
         if self.clob_client is None:
             try:
-                from src.api.clob_client import ClobClient
-                self.clob_client = ClobClient(self.config)
+                from src.api.clob_client import AsyncClobClient
+                self.clob_client = AsyncClobClient()
             except ImportError:
-                logger.warning("ClobClient not available")
+                logger.warning("AsyncClobClient not available")
 
         if self.gamma_client is None:
             try:
-                from src.api.gamma_client import GammaClient
-                self.gamma_client = GammaClient(self.config)
+                from src.api.gamma_client import AsyncGammaClient
+                self.gamma_client = AsyncGammaClient()
             except ImportError:
-                logger.warning("GammaClient not available")
+                logger.warning("AsyncGammaClient not available")
 
         if self.data_client is None:
             try:
-                from src.api.data_client import DataClient
-                self.data_client = DataClient(self.config)
+                from src.api.data_client import AsyncDataClient
+                self.data_client = AsyncDataClient()
             except ImportError:
-                logger.warning("DataClient not available")
+                logger.warning("AsyncDataClient not available")
 
         if self.ws_manager is None:
             try:
                 from src.api.ws_manager import WSManager
-                self.ws_manager = WSManager(self.config)
+                self.ws_manager = WSManager()
             except ImportError:
                 logger.warning("WSManager not available")
 
         if self.market_cache is None:
             try:
-                from src.data.market_cache import MarketCache
-                self.market_cache = MarketCache(self.config, self.gamma_client, self.clob_client)
+                from src.data.market_cache import MarketDataCache
+                self.market_cache = MarketDataCache()
             except ImportError:
-                logger.warning("MarketCache not available")
+                logger.warning("MarketDataCache not available")
 
         if self.db_manager is None:
             try:
                 from src.data.db import DBManager
-                self.db_manager = DBManager(self.config)
+                self.db_manager = DBManager()
                 await self.db_manager.init_db()
             except ImportError:
                 logger.warning("DBManager not available")
@@ -177,7 +177,7 @@ class TradingEngine:
             try:
                 from src.portfolio.tracker import PortfolioTracker
                 self.portfolio_tracker = PortfolioTracker(
-                    self.config, self.data_client, self.db_manager,
+                    data_client=self.data_client,
                 )
             except ImportError:
                 logger.warning("PortfolioTracker not available")
@@ -207,7 +207,7 @@ class TradingEngine:
         # Market Cache 초기 로드
         if self.market_cache is not None:
             try:
-                await self.market_cache.refresh_markets()
+                await self.market_cache.refresh_markets(self.gamma_client)
                 logger.info("Market cache refreshed")
             except Exception as e:
                 logger.warning("Market cache refresh failed: %s", e)
