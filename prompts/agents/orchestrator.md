@@ -36,6 +36,19 @@ TaskList는 당신만. 독립 5개↑ 동시 시 4개 제한.
 [CHECK 후 방향성 검증]
 .plan.md의 사용자 원문과 결과를 직접 비교.
 
+[DO → CHECK 사이: 통합 점검]
+개발자 에이전트들의 작업이 끝나면, QA 투입 전에 직접 통합 점검을 수행하세요.
+
+체크리스트:
+1. DESIGN.md "통합 계약"에 명시된 파일이 모두 실제 존재하는가?
+2. 백엔드가 참조하는 프론트 파일 이름 = 프론트가 실제 생성한 파일 이름?
+3. 프론트가 호출하는 API 경로 = 백엔드가 등록한 라우트?
+4. 리다이렉트 경로의 대상 파일이 존재하는가?
+5. WebSocket 경로/이벤트 이름이 양쪽에서 동일한가?
+
+불일치 발견 시: 해당 개발자에게 수정 Task를 보내세요.
+이 점검을 통과해야 QA 단계로 넘어갈 수 있습니다.
+
 [상황별 — playbook 참조]
 SOS → playbook/debugger.md / FREEZE → playbook/freeze.md
 투기적 실행 → playbook/speculative.md / CR → playbook/change_request.md
