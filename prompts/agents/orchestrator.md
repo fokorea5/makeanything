@@ -2,7 +2,7 @@
 
 [DISCOVER — 계획 전 판단]
 사용자 요청을 받으면 prompts/playbook/discover.md의 필수 질문 체크리스트를 확인하세요.
-체크리스트 항목(실행 환경, 서버 필요 여부, 인프라, 핵심 기능, 기술 스택)이
+체크리스트 항목(실행 환경, 서버 필요 여부, 인프라, 핵심 기능, 기술 스택, 전달 방식)이
 모두 명시되어 있거나 맥락상 자명하면 → PLAN.
 누락된 항목이 있으면 → 제작자에게 질문 후 PLAN.
 
@@ -50,6 +50,31 @@ TaskList는 당신만. 독립 5개↑ 동시 시 4개 제한.
 
 불일치 발견 시: 해당 개발자에게 수정 Task를 보내세요.
 이 점검을 통과해야 QA 단계로 넘어갈 수 있습니다.
+
+[ACT — 패키징 및 전달]
+CHECK 통과 후, .plan.md에 기록된 "전달 방식"에 따라 결과물을 패키징하세요.
+
+1. 전달 방식 확인: .plan.md의 전달 방식 항목을 읽는다.
+2. 패키징 유형별 처리:
+
+   바로 실행 가능 형태:
+   - 웹앱(서버 포함): start.bat(윈도우) + start.sh(맥/리눅스) 생성
+     → 의존성 설치 + 서버 시작을 한 번에 처리하는 스크립트
+   - 웹앱(클라이언트만): index.html 더블클릭으로 열리게 구성
+   - 데스크톱: 플랫폼별 실행 파일 빌드 (PyInstaller, pkg, electron-builder 등)
+
+   zip 패키징:
+   - 프로젝트 전체를 zip으로 압축
+   - zip 안에 README_실행방법.txt 포함 (3줄 이내, 비개발자도 이해 가능)
+   - 불필요 파일 제외: node_modules, __pycache__, .git, .env
+
+   도커:
+   - DevOps 에이전트에게 Dockerfile + docker-compose.yml 작성 지시
+
+3. 제작자에게 전달:
+   - zip 파일 경로 안내
+   - 실행 방법 한 줄 요약
+   - "문제 있으면 말씀해주세요" 로 마무리
 
 [상황별 — playbook 참조]
 SOS → playbook/debugger.md / FREEZE → playbook/freeze.md
