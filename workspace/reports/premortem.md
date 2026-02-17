@@ -1,38 +1,38 @@
-# Pre-mortem: Polymarket Reaper Bot v1.0
+# Pre-mortem — Polymarket Reaper Bot v1.1
 
-## 실패 시나리오 1: WebSocket 연결 불안정으로 Whale Shadow/Liquidity Vacuum 무력화
-**위험도**: HIGH
-**원인**: Polymarket WebSocket 서버의 구독 해제 미지원, 연결 끊김 시 오더북 데이터 갭
-**영향**: 실시간 전략 2개(Whale Shadow, Liquidity Vacuum)가 stale 데이터로 잘못된 시그널 생성 → 손실
-**대응**:
-- 자동 재연결 + 지수 백오프 (최대 5회, 1s→2s→4s→8s→16s)
-- 연결 상태 heartbeat 모니터 (30초 무응답 → 재연결)
-- stale 판정 타임스탬프: 마지막 메시지 후 60초 경과 시 해당 전략 시그널 자동 비활성화
-- WebSocket 실패 시 REST 폴백으로 30초 주기 polling (degraded mode)
+**작성일**: 2026-02-17
 
-## 실패 시나리오 2: asyncio 동시성 경합으로 시그널 순서 역전 / 중복 주문
-**위험도**: HIGH
-**원인**: 10개 전략이 동시에 시그널 발행, Meta Brain과 Executor 간 race condition
-**영향**: 같은 시장에 중복 주문, 또는 outdated 시그널이 최신보다 먼저 실행
-**대응**:
-- Signal Queue에 timestamp + sequence_number로 엄격한 정렬
-- condition_id 기준 deduplication: 같은 시장에 60초 내 중복 시그널 무시
-- Executor에 asyncio.Lock() per condition_id: 한 시장에 동시 주문 방지
-- 모든 시그널에 TTL 부여 (Sniper: 10초, Patient: 120초), 만료된 시그널 자동 폐기
+## 실패 시나리오 3개
 
-## 실패 시나리오 3: Rate Limit 초과로 API 차단 → 전략 polling 전면 마비
-**위험도**: MEDIUM
-**원인**: 10개 전략 × polling 주기가 100 req/min 공개 한도 초과, 429 연쇄 발생
-**영향**: 시장 데이터 갱신 불가 → stale 데이터로 시그널 생성 → 손실 또는 기회 상실
-**대응**:
-- 전략별 polling 주기 분산 스케줄링: jitter(±20%) 추가
-- Global rate limiter: asyncio.Semaphore + TokenBucket 알고리즘
-  - 공개 API: 최대 80 req/min (한도의 80%)
-  - 주문 API: 최대 45 orders/min (한도의 75%)
-- 429 응답 시 지수 백오프 + Retry-After 헤더 존중
-- WebSocket 데이터 우선 사용으로 REST 호출 최소화 (특히 오더북)
+### 시나리오 1: Rate Limit 병목으로 시그널 지연
 
-## 추가 리스크 메모
-- **L2 서명 30초 만료**: 시그널→주문 파이프라인 지연 시 서명 만료 가능. 서명은 주문 직전에 생성.
-- **py-clob-client 동기 한계**: SDK가 동기 전용. async wrapper에서 `run_in_executor`로 감싸되, 서명/주문 호출만 해당. 순수 HTTP는 aiohttp 직접 사용.
-- **Complete Set 아비트라지**: neg_risk 마켓에서만 동작. neg_risk 필터 필수.
+**상황**: Reactor α Stage 1이 1000+개 마켓을 Gamma API로 스캔할 때 100 req/분 한도에 도달. Target List 생성이 5분 → 15분으로 지연. 그 사이 기회가 소멸.
+
+**확률**: 중간 (마켓 수 증가 시 발생)
+
+**완화 방안**:
+- Gamma API 페이지네이션 캐시: 전체 마켓 목록은 5분 TTL 캐시. 변경분만 delta 조회.
+- Stage 1은 캐시된 데이터로 분석, API 갱신은 백그라운드.
+- Rate limit 카운터를 중앙 관리하여 Reactor α/Ω 간 배분.
+
+### 시나리오 2: WebSocket 단절 중 Complete Set 기회 놓침
+
+**상황**: WebSocket 연결이 끊어지고 재연결에 30초 소요. 그 동안 Complete Set 차익 기회 발생 및 소멸. Reactor Ω가 무방비 상태.
+
+**확률**: 낮음 (WS 안정성에 의존)
+
+**완화 방안**:
+- WS 단절 감지 즉시 REST API 폴링 폴백 모드 (10초 주기).
+- 재연결 성공 시 폴백 중단, WS 복귀.
+- 재연결 5회 실패 시 REST 전용 모드로 운영 (성능 저하 허용).
+
+### 시나리오 3: 전략 오판에 의한 연쇄 손실
+
+**상황**: Ambiguity Scoring이 특정 카테고리 마켓들을 오판하여 다수의 NO 포지션 보유. 해당 카테고리에서 연쇄 YES 결제 발생. 일일 손실 8% 서킷에 도달.
+
+**확률**: 중간 (모호성 판단은 주관적)
+
+**완화 방안**:
+- Correlation Guard가 같은 태그/카테고리 마켓 총 노출 제한 (Correlated Markets 전략 내 구현).
+- Circuit Breaker(AC-26) 발동 시 당일 전면 중단 + 기존 GTC 취소.
+- DRY_RUN 기간 동안 Ambiguity 키워드 사전을 실제 결과와 비교하여 튜닝.
