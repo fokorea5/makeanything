@@ -350,7 +350,7 @@ function createCard(entry) {
           </svg>
           MD
         </button>
-        ${entry.sourceUrl ? `<a class="card__source" href="${escapeAttr(entry.sourceUrl)}" target="_blank"
+        ${entry.sourceUrl && /^https?:\/\//i.test(entry.sourceUrl) ? `<a class="card__source" href="${escapeAttr(entry.sourceUrl)}" target="_blank"
              title="${escapeAttr(entry.sourceUrl)}" rel="noopener noreferrer">원본</a>` : ''}
       </div>
       <div class="card__note-area" hidden data-note-area="${entry.id}">
@@ -1026,13 +1026,18 @@ function escapeAttr(str) {
 
 /**
  * 검색 키워드 하이라이팅 (AC-11)
+ * HTML 엔티티를 깨뜨리지 않도록 엔티티/태그 밖의 텍스트에서만 치환
  */
 function highlightText(html, query) {
   if (!query || !query.trim()) return html;
-  // @confidence: low — 정규식 이스케이프 처리 필요
   const escaped = query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const regex = new RegExp(`(${escaped})`, 'gi');
-  return html.replace(regex, '<mark class="highlight">$1</mark>');
+  // HTML 엔티티(&amp; &lt; 등)와 태그를 건너뛰고 순수 텍스트에서만 치환
+  return html.replace(/(&[#\w]+;|<[^>]+>)|([^<&]*)/gi, (match, entity, text) => {
+    if (entity) return entity;
+    if (!text) return match;
+    return text.replace(regex, '<mark class="highlight">$1</mark>');
+  });
 }
 
 /**
@@ -1060,7 +1065,7 @@ function renderTagsHtml(tags) {
   return tags.map(tag => {
     const safeTag = escapeHtml(tag);
     const cls = tag.replace(/[^가-힣a-zA-Z0-9]/g, '') || 'other';
-    return `<span class="tag-chip tag-chip--${safeTag}">${safeTag}</span>`;
+    return `<span class="tag-chip tag-chip--${cls}">${safeTag}</span>`;
   }).join('');
 }
 

@@ -136,8 +136,8 @@
       // 이미 처리한 요소면 스킵
       if (processedElements.has(answerElement)) return;
 
-      // 너무 짧은 답변은 스트리밍 중일 가능성 — 최소 50자
-      if (answer.length < 50) return;
+      // 너무 짧은 답변은 스트리밍 중일 가능성 — 최소 10자 (AC-1: 짧은 답변도 저장)
+      if (answer.length < 10) return;
 
       // 처리 완료 마킹
       processedElements.add(answerElement);
@@ -154,7 +154,8 @@
           }
         });
 
-        if (response && response.success) {
+        // toastEnabled 확인 후 토스트 표시 (AC-19)
+        if (response && response.success && response.toastEnabled !== false) {
           showToast('💾 Nugget이 저장했어요');
         }
         // 실패 시 조용히 무시 (사용자 경험 방해 방지)

@@ -200,6 +200,14 @@ function _autoTag(question, answer) {
   return matched.length > 0 ? matched : ['기타'];
 }
 
+/** URL 프로토콜 검증 — https:만 허용 (javascript: 등 차단) */
+function _sanitizeUrl(url) {
+  if (!url || typeof url !== 'string') return '';
+  const trimmed = url.trim();
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return ''; // 허용되지 않은 프로토콜은 빈 문자열로
+}
+
 /** 마크다운 변환 */
 function _entryToMarkdown(entry) {
   if (!entry) return '';
@@ -241,21 +249,21 @@ function enforceFreeLimits(entries, isPro) {
     return entries.map(e => ({ ...e, archived: false }));
   }
 
-  // 무료: isJunk가 아니고 archived가 아닌 엔트리만 카운트
-  // 날짜 내림차순 정렬 후 500개 초과분을 archived:true
-  const activeEntries = entries
-    .filter(e => !e.archived && !e.isJunk)
+  const MAX = 500; // MAX_FREE_ENTRIES
+
+  // 무료: active(non-junk, non-archived) + 이전 archived를 모두 고려하여 재계산
+  // 1) isJunk가 아닌 엔트리만 추출하여 날짜 내림차순 정렬
+  const nonJunk = entries
+    .filter(e => !e.isJunk)
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  const MAX = 500; // MAX_FREE_ENTRIES
-  const toArchiveIds = new Set(
-    activeEntries.slice(MAX).map(e => e.id)
-  );
+  // 2) 상위 MAX개는 archived:false, 나머지는 archived:true
+  const keepActiveIds = new Set(nonJunk.slice(0, MAX).map(e => e.id));
 
-  return entries.map(e => ({
-    ...e,
-    archived: toArchiveIds.has(e.id) ? true : e.archived
-  }));
+  return entries.map(e => {
+    if (e.isJunk) return e; // 잡담은 archived 상태 유지
+    return { ...e, archived: !keepActiveIds.has(e.id) };
+  });
 }
 
 /**
@@ -368,6 +376,9 @@ async function saveEntry(data) {
     // 자동 태깅 (AC-8)
     const tags = _autoTag(question, answer);
 
+    // sourceUrl 프로토콜 검증 (javascript: 등 차단)
+    const safeUrl = _sanitizeUrl(sourceUrl);
+
     // 새 엔트리 생성
     /** @type {NuggetEntry} */
     const entry = {
@@ -382,7 +393,7 @@ async function saveEntry(data) {
       starred: false,
       isJunk: isJunk,
       archived: false,
-      sourceUrl: sourceUrl || '',
+      sourceUrl: safeUrl,
       note: '',
       hash: hash
     };
@@ -396,7 +407,7 @@ async function saveEntry(data) {
     // 뱃지 업데이트 (AC-18)
     updateBadge(updatedEntries, settings.isPro);
 
-    return { success: true, entry };
+    return { success: true, entry, toastEnabled: settings.toastEnabled };
   } catch (err) {
     console.error('[Nugget] saveEntry 오류:', err);
     return { success: false, error: err.message };
@@ -452,29 +463,55 @@ async function searchEntries(query, filters) {
 function applyFilters(entries, filters) {
   let result = entries;
 
-  // 기본: archived 제외, 잡담 제외
-  result = result.filter(e => !e.archived);
+  // 기본: archived 제외 (includeArchived가 true이면 포함)
+  if (!filters.includeArchived) {
+    result = result.filter(e => !e.archived);
+  }
   if (!filters.includeJunk) {
     result = result.filter(e => !e.isJunk);
   }
 
-  // 플랫폼 필터
-  if (filters.platform) {
+  // 플랫폼 필터 — 배열(platforms) 또는 단일(platform) 지원 (AC-10)
+  if (Array.isArray(filters.platforms) && filters.platforms.length > 0) {
+    result = result.filter(e => filters.platforms.includes(e.platform));
+  } else if (filters.platform) {
     result = result.filter(e => e.platform === filters.platform);
   }
 
-  // 기간 필터
-  if (filters.dateFrom) {
-    result = result.filter(e => e.date >= filters.dateFrom);
+  // 기간 필터 — period 프리셋을 dateFrom/dateTo로 변환 (AC-10)
+  let dateFrom = filters.dateFrom;
+  let dateTo = filters.dateTo;
+  if (filters.period && filters.period !== 'all' && filters.period !== 'custom') {
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+    if (filters.period === 'today') {
+      dateFrom = todayStr;
+      dateTo = todayStr;
+    } else if (filters.period === 'week') {
+      const weekAgo = new Date(now);
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      dateFrom = weekAgo.toISOString().slice(0, 10);
+      dateTo = todayStr;
+    } else if (filters.period === 'month') {
+      const monthAgo = new Date(now);
+      monthAgo.setMonth(monthAgo.getMonth() - 1);
+      dateFrom = monthAgo.toISOString().slice(0, 10);
+      dateTo = todayStr;
+    }
   }
-  if (filters.dateTo) {
-    // dateTo는 당일 포함 — 다음날 00:00 이전까지
-    const to = filters.dateTo + 'T23:59:59.999Z';
+
+  if (dateFrom) {
+    result = result.filter(e => e.date >= dateFrom);
+  }
+  if (dateTo) {
+    const to = dateTo + 'T23:59:59.999Z';
     result = result.filter(e => e.date <= to);
   }
 
-  // 태그 필터
-  if (filters.tag) {
+  // 태그 필터 — 배열(tags) 또는 단일(tag) 지원
+  if (Array.isArray(filters.tags) && filters.tags.length > 0) {
+    result = result.filter(e => Array.isArray(e.tags) && e.tags.some(t => filters.tags.includes(t)));
+  } else if (filters.tag) {
     result = result.filter(e => Array.isArray(e.tags) && e.tags.includes(filters.tag));
   }
 
@@ -694,6 +731,8 @@ async function importJSON(data) {
         skipped++;
         continue;
       }
+      // sourceUrl 프로토콜 검증
+      entry.sourceUrl = _sanitizeUrl(entry.sourceUrl);
       toImport.push(entry);
       imported++;
     }
@@ -889,8 +928,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
 
         case 'UPDATE_SETTINGS': {
-          if (!payload || !payload.key) {
-            sendResponse({ success: false, error: 'key 누락' });
+          // 보안: 허용된 설정 키만 변경 가능 (isPro, maxFreeEntries 등은 직접 변경 불가)
+          const ALLOWED_SETTINGS_KEYS = ['toastEnabled', 'junkFilterEnabled', 'shortcutKey'];
+          if (!payload || !payload.key || !ALLOWED_SETTINGS_KEYS.includes(payload.key)) {
+            sendResponse({ success: false, error: '허용되지 않은 설정 키' });
             break;
           }
           const settings = await loadSettings();
