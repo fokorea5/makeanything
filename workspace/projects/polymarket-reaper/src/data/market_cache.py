@@ -78,12 +78,15 @@ class MarketDataCache:
             offset = 0
             limit = 100
             while True:
+                logger.info("Fetching markets page offset=%d ...", offset)
                 batch = await gamma_client.get_markets(
                     active=True, limit=limit, offset=offset
                 )
                 if not batch:
+                    logger.info("No more markets at offset=%d (total so far: %d)", offset, len(all_markets))
                     break
                 all_markets.extend(batch)
+                logger.info("Got %d markets (total: %d)", len(batch), len(all_markets))
                 if len(batch) < limit:
                     break
                 offset += limit

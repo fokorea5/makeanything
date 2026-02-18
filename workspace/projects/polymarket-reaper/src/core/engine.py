@@ -133,6 +133,8 @@ class TradingEngine:
 
     async def _initialize(self) -> None:
         """컴포넌트를 초기화한다."""
+        logger.info("Initializing API clients...")
+
         # API 클라이언트 (외부에서 주입되지 않았으면 import 시도)
         if self.clob_client is None:
             try:
@@ -213,15 +215,22 @@ class TradingEngine:
         # 전략 초기화
         self._init_strategies()
 
-        # Market Cache 초기 로드
+        # Market Cache 초기 로드 (30초 타임아웃)
+        logger.info("Loading market data from Gamma API (timeout 30s)...")
         if self.market_cache is not None:
             try:
-                await self.market_cache.refresh_markets(self.gamma_client)
+                await asyncio.wait_for(
+                    self.market_cache.refresh_markets(self.gamma_client),
+                    timeout=30.0,
+                )
                 logger.info("Market cache refreshed")
+            except asyncio.TimeoutError:
+                logger.warning("Market cache refresh timed out after 30s -- continuing without cache")
             except Exception as e:
                 logger.warning("Market cache refresh failed: %s", e)
 
         # Portfolio Tracker 초기 동기화
+        logger.info("Syncing portfolio...")
         if self.portfolio_tracker is not None:
             try:
                 await self.portfolio_tracker.sync_positions()
@@ -253,6 +262,7 @@ class TradingEngine:
                 logger.warning("Initial AUTO transition failed: %s", e)
 
         # WebSocket 연결
+        logger.info("Connecting WebSocket...")
         await self._connect_websocket()
 
         # 터미널 대시보드 초기화
