@@ -125,7 +125,14 @@ class AsyncClobClient:
                 kwargs["funder"] = Config.FUNDER_ADDRESS
             return ClobClient(**kwargs)
 
-        self._client = await loop.run_in_executor(None, _create)
+        try:
+            self._client = await asyncio.wait_for(
+                loop.run_in_executor(None, _create),
+                timeout=30.0,
+            )
+        except asyncio.TimeoutError:
+            logger.error("ClobClient init timed out after 30s -- operating in stub mode")
+            return
         logger.info(
             "ClobClient initialised  host=%s  wallet=%s",
             Config.CLOB_HOST,

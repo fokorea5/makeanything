@@ -263,7 +263,18 @@ class TradingEngine:
         except ImportError:
             logger.info("Terminal Dashboard not available (install rich)")
 
-        logger.info("Engine initialization complete")
+        # 초기화 완료 상태 요약
+        market_count = len(self.market_cache._markets) if self.market_cache else 0
+        bankroll = await self.portfolio_tracker.get_bankroll() if self.portfolio_tracker else 0.0
+        effective_mode = self.frequency_governor.get_effective_mode_name()
+        logger.info(
+            "Engine initialization complete  markets=%d  bankroll=%.2f  mode=%s  "
+            "clob=%s  gamma=%s  data=%s",
+            market_count, bankroll, effective_mode,
+            "OK" if self.clob_client and getattr(self.clob_client, "_client", None) else "STUB",
+            "OK" if self.gamma_client and getattr(self.gamma_client, "_session", None) else "STUB",
+            "OK" if self.data_client and getattr(self.data_client, "_session", None) else "STUB",
+        )
 
     def _init_strategies(self) -> None:
         """전략 인스턴스를 초기화한다."""
@@ -343,7 +354,11 @@ class TradingEngine:
                 # Stage 1 실행
                 all_markets = await self._get_all_markets()
                 if not all_markets:
-                    logger.debug("No active markets for Stage 1")
+                    logger.warning(
+                        "No active markets for Stage 1 -- retrying in 30s "
+                        "(check Gamma API connection / GAMMA_HOST)"
+                    )
+                    await asyncio.sleep(30)
                     continue
 
                 self._target_list = await self._run_stage1(all_markets)
