@@ -44,7 +44,7 @@
 // ============================================================
 
 /**
- * 사용자 설정 (AC-27)
+ * 사용자 설정 (AC-27, v1.1: AC-V11-13, AC-V11-17)
  * @typedef {Object} NuggetSettings
  * @property {boolean} toastEnabled - 토스트 알림 on/off (기본: true)
  * @property {boolean} junkFilterEnabled - 잡담 필터 on/off (기본: true)
@@ -53,6 +53,8 @@
  * @property {boolean} isPro - Pro 여부 로컬 캐시 (기본: false)
  * @property {number} mdCopyCount - 이번 달 MD 복사 횟수 (기본: 0)
  * @property {string} mdCopyResetDate - MD 복사 카운터 리셋 날짜 (ISO date, 매월 1일 0시 UTC)
+ * @property {LanguageSetting} language - [v1.1] UI 언어 설정 (기본: 'auto')
+ * @property {ThemeSetting} theme - [v1.1] 테마 설정 (기본: 'system')
  */
 
 /**
@@ -74,8 +76,9 @@
  */
 
 /**
- * 메시지 타입 열거
- * @typedef {'SAVE_ENTRY' | 'SELECTOR_FAILED' | 'GET_ENTRIES' | 'SEARCH_ENTRIES' |
+ * 메시지 타입 열거 (v1.1: API_CAPTURE 추가)
+ * @typedef {'SAVE_ENTRY' | 'SELECTOR_FAILED' | 'API_CAPTURE' |
+ *   'GET_ENTRIES' | 'SEARCH_ENTRIES' |
  *   'TOGGLE_STAR' | 'UPDATE_NOTE' | 'COPY_MARKDOWN' | 'GET_TODAYS_NUGGET' |
  *   'DISMISS_TODAYS_NUGGET' | 'ADD_CUSTOM_TAG' | 'GET_SETTINGS' | 'UPDATE_SETTINGS' |
  *   'GET_PRO_STATUS' | 'OPEN_PAYMENT_PAGE' | 'GET_JUNK_KEYWORDS' | 'UPDATE_JUNK_KEYWORDS' |
@@ -174,6 +177,44 @@
  */
 
 // ============================================================
+// [v1.1] API 캡처 관련 타입
+// ============================================================
+
+/**
+ * API_CAPTURE 메시지 페이로드 (v1.1, AC-V11-2)
+ * bridge.js → Background
+ * @typedef {Object} ApiCapturePayload
+ * @property {Platform} platform - AI 플랫폼 식별자
+ * @property {string} question - 사용자 질문 (API 요청 body에서 추출)
+ * @property {string} answer - AI 답변 (SSE 스트림에서 추출)
+ * @property {string} sourceUrl - 페이지 URL
+ */
+
+/**
+ * 원격 셀렉터 캐시 (v1.1, AC-V11-7)
+ * @typedef {Object} RemoteSelectorsCache
+ * @property {string} version - 원격 셀렉터 버전 문자열
+ * @property {SelectorsConfig} selectors - 플랫폼별 셀렉터 설정
+ * @property {string} fetchedAt - 마지막 fetch 시각 (ISO 8601)
+ */
+
+// ============================================================
+// [v1.1] i18n / 테마 관련 타입
+// ============================================================
+
+/**
+ * UI 언어 설정 (v1.1, AC-V11-13)
+ * 'auto': navigator.language 기반 자동 감지 ('ko'로 시작 → ko, 'en'으로 시작 → en, 그 외 → ko)
+ * @typedef {'ko' | 'en' | 'auto'} LanguageSetting
+ */
+
+/**
+ * 테마 설정 (v1.1, AC-V11-17)
+ * 'system': OS prefers-color-scheme 따라감
+ * @typedef {'light' | 'dark' | 'system'} ThemeSetting
+ */
+
+// ============================================================
 // DOM 셀렉터 타입 (src/config/selectors.js)
 // ============================================================
 
@@ -199,7 +240,7 @@
 // ============================================================
 
 /**
- * NuggetSettings 기본값
+ * NuggetSettings 기본값 (v1.1: language, theme 추가 — AC-V11-21 마이그레이션 대응)
  * @type {NuggetSettings}
  */
 const DEFAULT_SETTINGS = {
@@ -213,7 +254,9 @@ const DEFAULT_SETTINGS = {
     new Date().getUTCFullYear(),
     new Date().getUTCMonth(),
     1
-  )).toISOString().slice(0, 10)
+  )).toISOString().slice(0, 10),
+  language: 'auto',   // [v1.1] AC-V11-13
+  theme: 'system'     // [v1.1] AC-V11-17
 };
 
 /**
