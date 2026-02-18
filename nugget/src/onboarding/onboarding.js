@@ -7,10 +7,24 @@
 'use strict';
 
 // =============================================
+// [v1.1] i18n / 테마 초기화
+// =============================================
+
+function initI18nAndTheme() {
+  if (typeof applyTheme === 'function') {
+    applyTheme();
+  }
+  if (typeof initI18n === 'function') {
+    initI18n();
+  }
+}
+
+// =============================================
 // 초기화
 // =============================================
 
 function init() {
+  initI18nAndTheme();
   bindEvents();
   // 온보딩 완료 여부와 무관하게 항상 표시
 }
