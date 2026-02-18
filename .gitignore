@@ -1,1 +1,9 @@
 .env
+db/*.db
+__pycache__/
+*.pyc
+.plan.md
+DESIGN.md
+workspace/reports/*.md
+workspace/alerts/*.md
+!workspace/**/.gitkeep
