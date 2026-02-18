@@ -58,34 +58,22 @@ class RingBufferHandler(logging.Handler):
         return list(self.buffer)
 
 
-def redirect_logs_to_file() -> RingBufferHandler:
-    """stdout 로그 핸들러를 파일로 전환하고, 링버퍼 핸들러를 추가한다.
+def attach_ring_handler() -> RingBufferHandler:
+    """링버퍼 핸들러를 루트 로거에 추가한다.
+
+    main.py에서 이미 로그를 파일로 전환했으므로,
+    여기서는 대시보드 표시용 링버퍼만 추가한다.
 
     Returns:
         RingBufferHandler — 대시보드에서 최근 로그 표시용.
     """
-    # logs 디렉토리 생성
-    log_dir = os.path.join(os.getcwd(), "logs")
-    os.makedirs(log_dir, exist_ok=True)
-    log_path = os.path.join(log_dir, "reaper.log")
-
     root = logging.getLogger()
-    fmt = logging.Formatter(
-        "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
 
-    # 기존 stdout 핸들러 제거
-    for handler in root.handlers[:]:
-        if isinstance(handler, logging.StreamHandler) and not isinstance(handler, logging.FileHandler):
-            root.removeHandler(handler)
+    # 이미 RingBufferHandler가 붙어있으면 재사용
+    for handler in root.handlers:
+        if isinstance(handler, RingBufferHandler):
+            return handler
 
-    # 파일 핸들러 추가
-    file_handler = logging.FileHandler(log_path, encoding="utf-8")
-    file_handler.setFormatter(fmt)
-    root.addHandler(file_handler)
-
-    # 링버퍼 핸들러 추가 (대시보드 표시용)
     ring_handler = RingBufferHandler(LOG_BUFFER_SIZE)
     ring_fmt = logging.Formatter(
         "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -115,9 +103,9 @@ class TerminalDashboard:
         """대시보드 메인 루프. REFRESH_INTERVAL 초마다 화면 갱신."""
         self._running = True
 
-        # 로그를 파일로 전환, 링버퍼 핸들러 획득
-        self._ring_handler = redirect_logs_to_file()
-        logger.info("Terminal Dashboard started (refresh=%ds, logs -> logs/reaper.log)", REFRESH_INTERVAL)
+        # 링버퍼 핸들러 연결 (로그 파일 전환은 main.py에서 이미 수행)
+        self._ring_handler = attach_ring_handler()
+        logger.info("Terminal Dashboard started (refresh=%ds)", REFRESH_INTERVAL)
 
         # 엔진 초기화 대기
         await asyncio.sleep(3)
