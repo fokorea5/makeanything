@@ -229,6 +229,29 @@ class TradingEngine:
             except Exception as e:
                 logger.warning("Portfolio sync failed: %s", e)
 
+            # bankroll이 0이면 INITIAL_BANKROLL fallback 적용
+            bankroll = await self.portfolio_tracker.get_bankroll()
+            if bankroll <= 0 and not getattr(self.config, "DRY_RUN", True):
+                initial = getattr(self.config, "INITIAL_BANKROLL", 0.0)
+                if initial > 0:
+                    self.portfolio_tracker.set_initial_bankroll(initial)
+                    logger.info("Bankroll set from INITIAL_BANKROLL: %.2f", initial)
+                else:
+                    logger.warning(
+                        "LIVE mode bankroll is 0. Set INITIAL_BANKROLL in .env "
+                        "or ensure Data API can reach wallet."
+                    )
+
+        # 즉시 AUTO 모드 전환 (60초 대기 없이 초기 DD 기반으로 설정)
+        if self.portfolio_tracker is not None:
+            try:
+                current_dd = await self.portfolio_tracker.get_current_drawdown()
+                await self.frequency_governor.check_auto_transition(current_dd)
+                effective = self.frequency_governor.get_effective_mode_name()
+                logger.info("Initial AUTO mode set: %s (DD=%.2f%%)", effective, current_dd * 100)
+            except Exception as e:
+                logger.warning("Initial AUTO transition failed: %s", e)
+
         # WebSocket 연결
         await self._connect_websocket()
 

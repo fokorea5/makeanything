@@ -171,6 +171,7 @@ class Config:
     DRY_RUN: bool = True
     DB_PATH: str = "data/reaper.db"
     LOG_LEVEL: str = "INFO"
+    INITIAL_BANKROLL: float = 0.0  # LIVE 모드 초기 bankroll (0 = Data API에서 자동 감지)
 
     # === Strategy toggles ===
     STRATEGY_AMBIGUITY: bool = True
@@ -252,6 +253,7 @@ class Config:
         cls.DRY_RUN = _env_bool("DRY_RUN", cls.DRY_RUN)
         cls.DB_PATH = _env("DB_PATH", cls.DB_PATH)
         cls.LOG_LEVEL = _env("LOG_LEVEL", cls.LOG_LEVEL).upper()
+        cls.INITIAL_BANKROLL = _env_float("INITIAL_BANKROLL", cls.INITIAL_BANKROLL)
 
         # --- Frequency Governor --- #
         cls.FREQUENCY_MODE = _env("FREQUENCY_MODE", cls.FREQUENCY_MODE).upper()

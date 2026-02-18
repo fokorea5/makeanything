@@ -10,6 +10,7 @@ DESIGN.md 3.15 / AC-34
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import datetime
 from typing import Any
@@ -58,11 +59,12 @@ class PortfolioTracker:
     # Synchronisation (AC-34, 120s cycle from engine)
     # ------------------------------------------------------------------
 
-    async def sync_positions(self) -> None:
+    async def sync_positions(self, retries: int = 3) -> None:
         """Synchronise positions with the Data API.
 
         In DRY_RUN mode, only updates prices for virtual positions
-        but does not fetch live positions.
+        but does not fetch live positions. Retries on failure with
+        exponential backoff.
         """
         if Config.DRY_RUN:
             logger.debug("DRY_RUN: skipping Data API sync, using virtual positions")
@@ -72,40 +74,52 @@ class PortfolioTracker:
             logger.warning("No data_client -- cannot sync positions")
             return
 
-        try:
-            raw_positions = await self._data_client.get_positions(Config.WALLET_ADDRESS)
-            new_positions: dict[str, Position] = {}
-            for pdata in raw_positions:
-                if pdata.size <= 0:
-                    continue
-                pos = Position(
-                    condition_id=pdata.condition_id,
-                    token_id=pdata.asset,
-                    outcome=pdata.outcome,
-                    size=pdata.size,
-                    avg_price=pdata.avg_price,
-                    current_price=pdata.current_price,
-                    unrealized_pnl=pdata.unrealized_pnl,
-                    market_question=pdata.title,
-                    is_dry_run=False,
+        last_error: Exception | None = None
+        for attempt in range(retries):
+            try:
+                raw_positions = await self._data_client.get_positions(Config.WALLET_ADDRESS)
+                new_positions: dict[str, Position] = {}
+                for pdata in raw_positions:
+                    if pdata.size <= 0:
+                        continue
+                    pos = Position(
+                        condition_id=pdata.condition_id,
+                        token_id=pdata.asset,
+                        outcome=pdata.outcome,
+                        size=pdata.size,
+                        avg_price=pdata.avg_price,
+                        current_price=pdata.current_price,
+                        unrealized_pnl=pdata.unrealized_pnl,
+                        market_question=pdata.title,
+                        is_dry_run=False,
+                    )
+                    new_positions[pdata.condition_id] = pos
+
+                self._positions = new_positions
+
+                # Update bankroll from portfolio value
+                portfolio_value = await self._data_client.get_portfolio_value(Config.WALLET_ADDRESS)
+                if portfolio_value > 0:
+                    self._bankroll = portfolio_value
+                    if portfolio_value > self._peak_bankroll:
+                        self._peak_bankroll = portfolio_value
+
+                logger.info(
+                    "Portfolio synced  positions=%d  bankroll=%.2f  peak=%.2f",
+                    len(self._positions), self._bankroll, self._peak_bankroll,
                 )
-                new_positions[pdata.condition_id] = pos
+                return  # 성공 시 즉시 반환
+            except Exception as e:  # noqa: BLE001
+                last_error = e
+                if attempt < retries - 1:
+                    wait = 2 ** (attempt + 1)
+                    logger.warning(
+                        "Sync attempt %d/%d failed: %s — retrying in %ds",
+                        attempt + 1, retries, e, wait,
+                    )
+                    await asyncio.sleep(wait)
 
-            self._positions = new_positions
-
-            # Update bankroll from portfolio value
-            portfolio_value = await self._data_client.get_portfolio_value(Config.WALLET_ADDRESS)
-            if portfolio_value > 0:
-                self._bankroll = portfolio_value
-                if portfolio_value > self._peak_bankroll:
-                    self._peak_bankroll = portfolio_value
-
-            logger.info(
-                "Portfolio synced  positions=%d  bankroll=%.2f  peak=%.2f",
-                len(self._positions), self._bankroll, self._peak_bankroll,
-            )
-        except Exception:  # noqa: BLE001
-            logger.exception("Failed to sync positions")
+        logger.error("Failed to sync positions after %d attempts: %s", retries, last_error)
 
     # ------------------------------------------------------------------
     # Position queries
