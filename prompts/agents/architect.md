@@ -29,3 +29,30 @@ DESIGN.md에 반드시 "## 통합 계약" 섹션을 포함하세요.
 
 이 계약에 있는 이름은 개발자가 임의로 변경할 수 없습니다.
 변경이 필요하면 반드시 오케스트레이터를 통해 설계자 승인을 받아야 합니다.
+
+[시그니처 사양 — 필수]
+DESIGN.md에 반드시 "## 시그니처 사양" 섹션을 포함하세요.
+이 섹션은 개발자가 코드를 작성하기 전 반드시 참조해야 하는 인터페이스 명세입니다.
+
+모든 public 클래스에 대해 다음을 표 또는 코드 블록으로 명시하세요:
+
+```
+### [모듈 경로] (예: src/api/clob_client.py)
+
+class AsyncClobClient:
+  __init__(self) → None                    # config 접근 방식: Config.instance()
+  async init(self) → None                  # 비동기 초기화 필요 여부
+  async get_markets(next_cursor: str) → dict
+  async post_order(order: SignedOrder) → OrderResult
+```
+
+필수 명시 항목:
+1. 클래스 이름 (정확한 명명)
+2. __init__ 파라미터 (인자 없음 vs config 주입 — 프로젝트 내 통일)
+3. 비동기 초기화 패턴: async init() 필요 여부와 호출 시점
+4. public 메서드: 이름, 파라미터 타입, 반환 타입
+5. config 접근 패턴: 싱글톤(Config.instance()) vs 명시적 주입(config 파라미터)
+   → 프로젝트 전체에서 하나의 패턴만 사용. 혼용 금지.
+
+개발자는 이 사양의 클래스명, 생성자 패턴, 메서드 시그니처를 그대로 구현해야 합니다.
+변경이 필요하면 FREEZE를 선언하고 오케스트레이터에게 보고하세요.
