@@ -4,18 +4,24 @@ Polymarket Reaper Bot v1.1 -- Terminal Dashboard
 Rich 기반 터미널 대시보드.
 엔진의 8번째 비동기 태스크로 동작하며, 15초 주기로 갱신.
 
+대시보드 시작 시 로그 출력을 파일(logs/reaper.log)로 전환하고,
+화면에는 Rich UI만 표시한다.
+
 표시 정보:
   - 포트폴리오 요약 (잔고, 노출, DD, P&L)
   - 보유 포지션
   - 활성 시장 현황 (Target / Hit List)
   - 최근 시그널 & 거래
-  - 시스템 상태 (Governor 모드, 큐 깊이, API 상태)
+  - 시스템 상태 (Governor 모드, 큐 깊이)
+  - 최근 로그 (메모리 링버퍼)
 """
 
 from __future__ import annotations
 
 import asyncio
 import logging
+import os
+from collections import deque
 from datetime import datetime
 from typing import Any
 
@@ -24,13 +30,71 @@ from rich.table import Table
 from rich.panel import Panel
 from rich.columns import Columns
 from rich.text import Text
-from rich.layout import Layout
-from rich.live import Live
 
 logger = logging.getLogger("reaper.ui.dashboard")
 
 # 갱신 주기 (초)
 REFRESH_INTERVAL = 15
+
+# 로그 링버퍼 크기
+LOG_BUFFER_SIZE = 12
+
+
+class RingBufferHandler(logging.Handler):
+    """최근 로그를 메모리 링버퍼에 저장하는 핸들러."""
+
+    def __init__(self, capacity: int = LOG_BUFFER_SIZE) -> None:
+        super().__init__()
+        self.buffer: deque[str] = deque(maxlen=capacity)
+
+    def emit(self, record: logging.LogRecord) -> None:
+        try:
+            msg = self.format(record)
+            self.buffer.append(msg)
+        except Exception:
+            pass
+
+    def get_lines(self) -> list[str]:
+        return list(self.buffer)
+
+
+def redirect_logs_to_file() -> RingBufferHandler:
+    """stdout 로그 핸들러를 파일로 전환하고, 링버퍼 핸들러를 추가한다.
+
+    Returns:
+        RingBufferHandler — 대시보드에서 최근 로그 표시용.
+    """
+    # logs 디렉토리 생성
+    log_dir = os.path.join(os.getcwd(), "logs")
+    os.makedirs(log_dir, exist_ok=True)
+    log_path = os.path.join(log_dir, "reaper.log")
+
+    root = logging.getLogger()
+    fmt = logging.Formatter(
+        "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
+    # 기존 stdout 핸들러 제거
+    for handler in root.handlers[:]:
+        if isinstance(handler, logging.StreamHandler) and not isinstance(handler, logging.FileHandler):
+            root.removeHandler(handler)
+
+    # 파일 핸들러 추가
+    file_handler = logging.FileHandler(log_path, encoding="utf-8")
+    file_handler.setFormatter(fmt)
+    root.addHandler(file_handler)
+
+    # 링버퍼 핸들러 추가 (대시보드 표시용)
+    ring_handler = RingBufferHandler(LOG_BUFFER_SIZE)
+    ring_fmt = logging.Formatter(
+        "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        datefmt="%H:%M:%S",
+    )
+    ring_handler.setFormatter(ring_fmt)
+    root.addHandler(ring_handler)
+
+    return ring_handler
 
 
 class TerminalDashboard:
@@ -44,14 +108,19 @@ class TerminalDashboard:
         self.engine = engine
         self.console = Console()
         self._running = False
+        self._ring_handler: RingBufferHandler | None = None
+        self._cached_trades: list[dict] = []
 
     async def run(self) -> None:
         """대시보드 메인 루프. REFRESH_INTERVAL 초마다 화면 갱신."""
         self._running = True
-        logger.info("Terminal Dashboard started (refresh=%ds)", REFRESH_INTERVAL)
+
+        # 로그를 파일로 전환, 링버퍼 핸들러 획득
+        self._ring_handler = redirect_logs_to_file()
+        logger.info("Terminal Dashboard started (refresh=%ds, logs -> logs/reaper.log)", REFRESH_INTERVAL)
 
         # 엔진 초기화 대기
-        await asyncio.sleep(5)
+        await asyncio.sleep(3)
 
         while self._running and getattr(self.engine, "_running", False):
             try:
@@ -100,6 +169,10 @@ class TerminalDashboard:
             self._build_recent_trades_panel(),
         ]
         self.console.print(Columns(bottom_panels, equal=True, expand=True))
+        self.console.print()
+
+        # 최하단: 최근 로그
+        self.console.print(self._build_log_panel())
 
     # ------------------------------------------------------------------
     # 헤더
@@ -110,7 +183,7 @@ class TerminalDashboard:
         dry_run = getattr(self.engine.config, "DRY_RUN", True)
         mode_tag = "[bold red]LIVE[/bold red]" if not dry_run else "[bold yellow]DRY RUN[/bold yellow]"
         title = Text.from_markup(
-            f"[bold cyan]Polymarket Reaper Bot v1.1[/bold cyan]  {mode_tag}  |  {now}"
+            f"[bold cyan]POLYMARKET REAPER v1.1[/bold cyan]  {mode_tag}  |  {now}"
         )
         return Panel(title, style="bright_blue", expand=True)
 
@@ -123,12 +196,14 @@ class TerminalDashboard:
         if tracker is None:
             return Panel("[dim]Portfolio tracker unavailable[/dim]", title="Portfolio")
 
+        dry_run = getattr(self.engine.config, "DRY_RUN", True)
+
         bankroll = tracker._bankroll
-        if getattr(self.engine.config, "DRY_RUN", True) and bankroll <= 0:
+        if dry_run and bankroll <= 0:
             bankroll = 1000.0
 
         peak = tracker._peak_bankroll
-        if getattr(self.engine.config, "DRY_RUN", True) and peak <= 0:
+        if dry_run and peak <= 0:
             peak = 1000.0
 
         dd = (peak - bankroll) / peak if peak > 0 else 0.0
@@ -136,9 +211,7 @@ class TerminalDashboard:
         daily_pnl = tracker._daily_pnl
 
         # 노출 계산
-        positions = list(tracker._virtual_positions.values()) if getattr(
-            self.engine.config, "DRY_RUN", True
-        ) else list(tracker._positions.values())
+        positions = list(tracker._virtual_positions.values()) if dry_run else list(tracker._positions.values())
         total_exposure = sum(p.size * p.current_price for p in positions)
         unrealized_pnl = sum(p.unrealized_pnl for p in positions)
 
@@ -209,9 +282,8 @@ class TerminalDashboard:
         if tracker is None:
             return Panel("[dim]No positions[/dim]", title="Positions")
 
-        positions = list(tracker._virtual_positions.values()) if getattr(
-            self.engine.config, "DRY_RUN", True
-        ) else list(tracker._positions.values())
+        dry_run = getattr(self.engine.config, "DRY_RUN", True)
+        positions = list(tracker._virtual_positions.values()) if dry_run else list(tracker._positions.values())
 
         table = Table(expand=True, show_lines=False, pad_edge=False)
         table.add_column("Market", style="white", max_width=45, no_wrap=True)
@@ -226,7 +298,7 @@ class TerminalDashboard:
         else:
             # 미실현 P&L 크기순 정렬
             sorted_pos = sorted(positions, key=lambda p: abs(p.unrealized_pnl), reverse=True)
-            for pos in sorted_pos[:10]:  # 최대 10개
+            for pos in sorted_pos[:10]:
                 question = pos.market_question or pos.condition_id[:20]
                 if len(question) > 42:
                     question = question[:42] + "..."
@@ -294,14 +366,7 @@ class TerminalDashboard:
     # ------------------------------------------------------------------
 
     def _build_recent_trades_panel(self) -> Panel:
-        db = self.engine.db_manager
-        if db is None:
-            return Panel("[dim]DB unavailable[/dim]", title="Recent Trades")
-
-        # DB에서 오늘 거래 가져오기 (동기적으로 캐시 참조)
-        # 비동기 호출은 렌더 루프에서 하기 어려우므로,
-        # 최근 거래는 _last_trades 캐시를 통해 표시
-        trades = getattr(self, "_cached_trades", [])
+        trades = self._cached_trades
 
         table = Table(expand=True, show_lines=False, pad_edge=False)
         table.add_column("Time", width=8)
@@ -343,6 +408,37 @@ class TerminalDashboard:
         return Panel(table, title="[bold]Recent Trades[/bold]", border_style="blue")
 
     # ------------------------------------------------------------------
+    # 최근 로그 패널
+    # ------------------------------------------------------------------
+
+    def _build_log_panel(self) -> Panel:
+        if self._ring_handler is None:
+            return Panel("[dim]Log handler not attached[/dim]", title="Logs")
+
+        lines = self._ring_handler.get_lines()
+        if not lines:
+            content = "[dim]Waiting for log events...[/dim]"
+        else:
+            colored_lines = []
+            for line in lines:
+                if "[ERROR]" in line:
+                    colored_lines.append(f"[red]{line}[/red]")
+                elif "[WARNING]" in line:
+                    colored_lines.append(f"[yellow]{line}[/yellow]")
+                elif "[INFO]" in line:
+                    colored_lines.append(f"[white]{line}[/white]")
+                else:
+                    colored_lines.append(f"[dim]{line}[/dim]")
+            content = "\n".join(colored_lines)
+
+        return Panel(
+            content,
+            title="[bold]Logs[/bold] [dim](full: logs/reaper.log)[/dim]",
+            border_style="dim",
+            expand=True,
+        )
+
+    # ------------------------------------------------------------------
     # 비동기 데이터 갱신 (run 루프에서 호출)
     # ------------------------------------------------------------------
 
@@ -353,7 +449,6 @@ class TerminalDashboard:
             try:
                 today = datetime.utcnow().strftime("%Y-%m-%d")
                 trades = await db.get_trades_for_date(today)
-                # 최신순 정렬
                 if trades:
                     trades = sorted(
                         trades,
