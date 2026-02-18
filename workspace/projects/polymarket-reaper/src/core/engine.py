@@ -325,11 +325,17 @@ class TradingEngine:
 
     async def _run_reactor_alpha(self) -> None:
         """Reactor Alpha (Slow Brain) 3단계 퍼널 (AC-01)."""
+        first_run = True
         while self._running:
             try:
-                # Stage 1 스캔 (Governor 주기에 따라)
-                stage1_interval = self.frequency_governor.get_stage1_interval()
-                await asyncio.sleep(stage1_interval)
+                # 첫 사이클은 즉시 실행, 이후부터 Governor 주기에 따라 대기
+                if first_run:
+                    first_run = False
+                    # 초기화 직후 market cache가 아직 비었을 수 있으므로 짧게 대기
+                    await asyncio.sleep(5)
+                else:
+                    stage1_interval = self.frequency_governor.get_stage1_interval()
+                    await asyncio.sleep(stage1_interval)
 
                 if not self._running:
                     break
@@ -810,10 +816,17 @@ class TradingEngine:
     # ------------------------------------------------------------------
 
     async def _get_all_markets(self) -> list[MarketData]:
-        """활성 마켓 전체를 가져온다."""
+        """활성 마켓 전체를 가져온다. 캐시가 비면 1회 refresh 시도."""
         if self.market_cache is not None:
             try:
-                return await self.market_cache.get_all_active_markets()
+                markets = await self.market_cache.get_all_active_markets()
+                if markets:
+                    return markets
+                # 캐시가 비었으면 refresh 후 재시도
+                logger.info("Market cache empty, refreshing...")
+                if self.gamma_client is not None:
+                    await self.market_cache.refresh_markets(self.gamma_client)
+                    return await self.market_cache.get_all_active_markets()
             except Exception as e:
                 logger.error("Failed to get markets: %s", e)
         return []
