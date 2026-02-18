@@ -96,8 +96,8 @@ async function sendMsg(type, payload = {}) {
 // =============================================
 
 function initI18nAndTheme() {
-  if (typeof applyTheme === 'function') {
-    applyTheme();
+  if (typeof initTheme === 'function') {
+    initTheme();
   }
   if (typeof initI18n === 'function') {
     initI18n();
@@ -219,18 +219,16 @@ async function saveSetting(key, value) {
 async function handleLanguageChange() {
   const lang = els.selectLanguage.value;
 
-  // 즉시 i18n 재적용
-  if (typeof setLanguage === 'function') {
-    setLanguage(lang);
-  } else if (typeof initI18n === 'function') {
-    initI18n(lang);
+  // chrome.storage에 먼저 저장 (changeLanguage보다 먼저 저장해야 다른 페이지 동기화)
+  await sendMsg(MSG.UPDATE_SETTINGS, { key: 'language', value: lang });
+
+  // 즉시 i18n 재적용 (AC-V11-12: Options 페이지 즉시 반영)
+  if (typeof changeLanguage === 'function') {
+    changeLanguage(lang);
   }
 
   // 저장 완료 인디케이터 표시
   showSavedIndicator(els.langSavedIndicator);
-
-  // chrome.storage에 저장
-  await sendMsg(MSG.UPDATE_SETTINGS, { key: 'language', value: lang });
 }
 
 // =============================================
@@ -241,9 +239,9 @@ async function handleThemeChange(e) {
   const themeValue = e.currentTarget.getAttribute('data-theme-value');
   if (!themeValue) return;
 
-  // 즉시 테마 적용
-  if (typeof applyTheme === 'function') {
-    applyTheme(themeValue);
+  // 즉시 테마 적용 (AC-V11-16: changeTheme으로 'system' → resolve + watcher 등록)
+  if (typeof changeTheme === 'function') {
+    changeTheme(themeValue);
   }
 
   // 버튼 UI 업데이트

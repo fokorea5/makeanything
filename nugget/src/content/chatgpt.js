@@ -21,6 +21,9 @@
   const DEBOUNCE_MS = 1000;   // STREAMING_DEBOUNCE_MS
   const SAVE_ENTRY_DEDUP_DELAY_MS = 500; // [v1.1] API 캡처 중복 방지 대기 (AC-V11-4a)
 
+  // [v1.1] i18n 초기화 — 토스트 메시지 다국어 지원 (AC-V11-14)
+  if (typeof initI18n === 'function') initI18n();
+
   // 이미 처리한 답변 DOM 요소를 추적 (중복 저장 방지)
   const processedElements = new WeakSet();
 
@@ -146,7 +149,7 @@
         // toastEnabled 확인 후 토스트 표시 (AC-19)
         // [v1.1] API 캡처 중복으로 무시된 경우 토스트 표시 안 함
         if (response && response.success && response.toastEnabled !== false) {
-          showToast('💾 Nugget이 저장했어요');
+          showToast('💾 ' + (typeof t === 'function' ? t('toast_saved') : 'Nugget이 저장했어요'));
         }
       } catch (err) {
         console.debug('[Nugget/chatgpt] sendMessage 실패:', err);

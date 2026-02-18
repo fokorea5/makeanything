@@ -11,8 +11,8 @@
 // =============================================
 
 function initI18nAndTheme() {
-  if (typeof applyTheme === 'function') {
-    applyTheme();
+  if (typeof initTheme === 'function') {
+    initTheme();
   }
   if (typeof initI18n === 'function') {
     initI18n();

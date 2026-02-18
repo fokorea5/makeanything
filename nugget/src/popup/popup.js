@@ -151,9 +151,9 @@ async function sendMsg(type, payload = {}) {
  * HTML에서 i18n.js와 theme.js가 먼저 로드되어야 함
  */
 function initI18nAndTheme() {
-  // theme.js가 로드되었으면 테마 적용
-  if (typeof applyTheme === 'function') {
-    applyTheme();
+  // theme.js가 로드되었으면 테마 초기화 (storage에서 읽어서 적용)
+  if (typeof initTheme === 'function') {
+    initTheme();
   }
   // i18n.js가 로드되었으면 번역 적용
   if (typeof initI18n === 'function') {

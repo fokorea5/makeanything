@@ -50,17 +50,17 @@
     },
     {
       "matches": ["https://claude.ai/*"],
-      "js": ["src/shared/types.js", "src/config/selectors.js", "src/content/claude.js"],
+      "js": ["src/shared/types.js", "src/config/selectors.js", "src/utils/i18n.js", "src/content/claude.js"],
       "run_at": "document_idle"
     },
     {
       "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
-      "js": ["src/shared/types.js", "src/config/selectors.js", "src/content/chatgpt.js"],
+      "js": ["src/shared/types.js", "src/config/selectors.js", "src/utils/i18n.js", "src/content/chatgpt.js"],
       "run_at": "document_idle"
     },
     {
       "matches": ["https://gemini.google.com/*"],
-      "js": ["src/shared/types.js", "src/config/selectors.js", "src/content/gemini.js"],
+      "js": ["src/shared/types.js", "src/config/selectors.js", "src/utils/i18n.js", "src/content/gemini.js"],
       "run_at": "document_idle"
     },
     {
