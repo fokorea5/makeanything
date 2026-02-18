@@ -83,6 +83,9 @@ class TradingEngine:
         self._target_list: list[MarketData] = []
         self._hit_list: list[MarketData] = []
 
+        # 터미널 대시보드
+        self._dashboard: Any = None
+
         # Market Age 파라미터 (AC-09)
         self._market_age_hours: int = getattr(config, "MARKET_AGE_HOURS", 48)
         self._market_age_bonus: float = getattr(config, "MARKET_AGE_BONUS", 0.15)
@@ -105,7 +108,7 @@ class TradingEngine:
         logger.info("Trading Engine running. DRY_RUN=%s", getattr(self.config, "DRY_RUN", True))
 
         try:
-            await asyncio.gather(
+            tasks = [
                 self._run_reactor_alpha(),
                 self._run_reactor_omega(),
                 self._consume_signals(),
@@ -113,7 +116,10 @@ class TradingEngine:
                 self._portfolio_sync(),
                 self._governor_auto_check(),
                 self._health_check(),
-            )
+            ]
+            if self._dashboard is not None:
+                tasks.append(self._dashboard.run())
+            await asyncio.gather(*tasks)
         except asyncio.CancelledError:
             logger.info("Engine tasks cancelled")
         except Exception as e:
@@ -225,6 +231,14 @@ class TradingEngine:
 
         # WebSocket 연결
         await self._connect_websocket()
+
+        # 터미널 대시보드 초기화
+        try:
+            from src.ui.dashboard import TerminalDashboard
+            self._dashboard = TerminalDashboard(self)
+            logger.info("Terminal Dashboard initialized")
+        except ImportError:
+            logger.info("Terminal Dashboard not available (install rich)")
 
         logger.info("Engine initialization complete")
 
