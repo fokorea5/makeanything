@@ -886,3 +886,1128 @@ Options와 Onboarding은 새 탭에서 열리므로 일반 웹 반응형을 적�
 | 학습 | `rgba(139, 92, 246, 0.1)` | `#8B5CF6` | 보라 |
 | 크리에이티브 | `rgba(236, 72, 153, 0.1)` | `#EC4899` | 핑크 |
 | 기타 | `rgba(107, 114, 128, 0.1)` | `#6B7280` | 회색 |
+
+---
+
+# v1.1 업데이트 — 다크모드 & i18n UI 가이드
+
+> 이 섹션은 v1.0 디자인을 유지하면서 v1.1에서 추가되는 다크모드 테마, 언어 설정 UI,
+> Options 페이지 재구성에 대한 가이드라인을 정의합니다.
+> 참조: `.plan.v1.1.md` AC-V11-10 ~ AC-V11-20
+
+---
+
+## 12. 다크모드 테마 디자인
+
+### 12.1 테마 모드
+
+Nugget은 3가지 테마 모드를 지원합니다:
+
+| 모드 | 동작 | 설정값 |
+|------|------|--------|
+| 라이트 | 항상 라이트 테마 적용 | `'light'` |
+| 다크 | 항상 다크 테마 적용 | `'dark'` |
+| 시스템 | OS의 `prefers-color-scheme` 따라감 | `'system'` (기본값) |
+
+**적용 방식:**
+- `<html>` 또는 `<body>` 요소에 `data-theme="light"` 또는 `data-theme="dark"` 속성 부여
+- `system` 선택 시 `window.matchMedia('(prefers-color-scheme: dark)')` 결과에 따라 결정
+- `prefers-color-scheme` 변경 시 실시간 반영 (`MediaQueryList.addEventListener('change', ...)`)
+
+```js
+// Theme initialization pseudo-code
+function applyTheme(themeSetting) {
+  let resolved = themeSetting;
+  if (themeSetting === 'system') {
+    resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  document.documentElement.setAttribute('data-theme', resolved);
+}
+```
+
+### 12.2 다크모드 색상 팔레트
+
+#### 12.2.1 시스템 색상 — 라이트 vs 다크
+
+| CSS 변수 | 라이트 값 (v1.0 유지) | 다크 값 | 용도 |
+|----------|---------------------|---------|------|
+| `--bg-primary` | `#FFFFFF` | `#1A1A2E` | 전체 배경 |
+| `--bg-surface` | `#F8F9FA` | `#252540` | 카드 배경, 입력 필드 배경 |
+| `--bg-surface-hover` | `#F1F3F5` | `#2E2E4A` | 카드 hover |
+| `--bg-elevated` | `#FFFFFF` | `#2E2E4A` | 모달, 드롭다운, 팝오버 배경 (v1.1 신규) |
+| `--border-default` | `#E1E4E8` | `#3A3A5C` | 테두리, 구분선 |
+| `--border-subtle` | `#F1F3F5` | `#2E2E4A` | 약한 구분선 (v1.1 신규) |
+| `--text-primary` | `#1A1A2E` | `#E8E8F0` | 제목, 본문 |
+| `--text-secondary` | `#6B7280` | `#A0A0B8` | 부제목, 메타 정보 |
+| `--text-tertiary` | `#9CA3AF` | `#6B6B85` | 비활성 텍스트, 힌트 |
+| `--text-on-primary` | `#FFFFFF` | `#FFFFFF` | Primary 배경 위 텍스트 (v1.1 신규) |
+
+#### 12.2.2 브랜드 색상 — 다크 배경 조정
+
+| CSS 변수 | 라이트 값 | 다크 값 | 조정 이유 |
+|----------|---------|---------|----------|
+| `--nugget-primary` | `#F5A623` | `#F5A623` | 유지 — 다크 배경에서 대비 충분 (대비비 4.8:1 on #1A1A2E) |
+| `--nugget-primary-dark` | `#D4891A` | `#FFB940` | 밝게 조정 — hover/active 상태에서 다크 배경과 구분 |
+| `--nugget-primary-light` | `#FFF3DC` | `#3D2E1A` | 다크 톤의 골드 배경 — Today's Nugget, 선택 하이라이트 |
+
+**Nugget Gold 다크모드 지침:**
+- `#F5A623`은 다크 배경(`#1A1A2E`)에서 대비비 약 4.8:1로 WCAG AA를 통과하므로 **변경 없이 유지**합니다.
+- `--nugget-primary-light`만 다크 환경에서는 어두운 골드 톤(`#3D2E1A`)으로 반전합니다.
+  이 색상은 Today's Nugget 배경이나 선택 상태 하이라이트에 사용됩니다.
+- hover/active에 사용하는 `--nugget-primary-dark`는 다크 배경에서 더 밝은 `#FFB940`으로 조정하여 시인성을 확보합니다.
+
+#### 12.2.3 플랫폼 식별 색상 — 다크 배경 조정
+
+| CSS 변수 | 라이트 값 | 다크 값 | 조정 근거 |
+|----------|---------|---------|----------|
+| `--color-claude` | `#7C3AED` | `#9B6BFF` | 밝기 +15%. 다크 배경 대비비 4.5:1 이상 확보 |
+| `--color-chatgpt` | `#10A37F` | `#34D399` | 밝기 +20%. #10A37F는 다크 배경에서 대비 부족 |
+| `--color-gemini` | `#4285F4` | `#60A5FA` | 밝기 +15%. 가독성 향상 |
+
+**플랫폼 컬러 다크모드 지침:**
+- 카드 좌측 4px 스트라이프: 다크 값 사용 (시인성 확보)
+- 필터 칩 텍스트: 다크 값 사용
+- 필터 칩 배경 (10% 투명도): 다크 값 기준으로 재계산
+  - Claude: `rgba(155, 107, 255, 0.15)` (다크에서 투명도 15%로 상향)
+  - ChatGPT: `rgba(52, 211, 153, 0.15)`
+  - Gemini: `rgba(96, 165, 250, 0.15)`
+- 플랫폼 아이콘(원형 텍스트 아바타): 배경색은 다크 값, 텍스트는 `#FFFFFF` 유지
+
+#### 12.2.4 상태 색상 — 다크 배경 조정
+
+| CSS 변수 | 라이트 값 | 다크 값 | 비고 |
+|----------|---------|---------|------|
+| `--color-success` | `#22C55E` | `#34D399` | 밝기 +10% |
+| `--color-warning` | `#F59E0B` | `#FBBF24` | 밝기 +8% |
+| `--color-error` | `#EF4444` | `#F87171` | 밝기 +12% |
+| `--color-info` | `#3B82F6` | `#60A5FA` | 밝기 +15% |
+| `--color-pro` | `#8B5CF6` | `#A78BFA` | 밝기 +12% |
+
+#### 12.2.5 태그 카테고리 색상 — 다크 배경 조정
+
+| 태그 | 다크 배경 (15%) | 다크 텍스트 |
+|------|----------------|-----------|
+| 코딩 | `rgba(96, 165, 250, 0.15)` | `#60A5FA` |
+| 글쓰기 | `rgba(52, 211, 153, 0.15)` | `#34D399` |
+| 업무 | `rgba(251, 191, 36, 0.15)` | `#FBBF24` |
+| 학습 | `rgba(167, 139, 250, 0.15)` | `#A78BFA` |
+| 크리에이티브 | `rgba(244, 114, 182, 0.15)` | `#F472B6` |
+| 기타 | `rgba(156, 163, 175, 0.15)` | `#9CA3AF` |
+
+**다크 태그 지침:** 배경 투명도를 10%에서 15%로 높여 다크 배경에서 태그 칩의 시인성을 확보합니다.
+
+#### 12.2.6 그림자(Shadow) — 다크 모드
+
+| CSS 변수 | 라이트 값 | 다크 값 |
+|----------|---------|---------|
+| `--shadow-sm` | `0 1px 2px rgba(0,0,0,0.05)` | `0 1px 2px rgba(0,0,0,0.3)` |
+| `--shadow-md` | `0 2px 8px rgba(0,0,0,0.1)` | `0 2px 8px rgba(0,0,0,0.4)` |
+| `--shadow-lg` | `0 4px 16px rgba(0,0,0,0.12)` | `0 4px 16px rgba(0,0,0,0.5)` |
+
+**다크 그림자 지침:** 다크 배경에서 그림자는 매우 보이기 어려우므로, 불투명도를 대폭 높여 카드 분리감을 유지합니다.
+
+#### 12.2.7 기타 다크 전용 변수
+
+| CSS 변수 | 다크 값 | 용도 |
+|----------|---------|------|
+| `--overlay-bg` | `rgba(0, 0, 0, 0.6)` | 모달 배경 오버레이 (라이트: `rgba(0,0,0,0.4)`) |
+| `--skeleton-base` | `#252540` | 스켈레톤 기본 색상 |
+| `--skeleton-shine` | `#3A3A5C` | 스켈레톤 shimmer 피크 색상 |
+| `--highlight-search` | `#78500A` | 검색 하이라이트 배경 (라이트: `#FEF08A`) |
+| `--scrollbar-thumb` | `#3A3A5C` | 스크롤바 색상 (라이트: 기본 회색) |
+| `--scrollbar-thumb-hover` | `#505070` | 스크롤바 hover (v1.1 신규) |
+
+### 12.3 완전한 CSS 변수 정의 (라이트 + 다크)
+
+프론트엔드 개발자는 아래 CSS를 각 페이지(popup.css, options.css, onboarding.css)의 최상단에 추가합니다.
+
+```css
+/* ==============================
+   Nugget v1.1 Theme Variables
+   ============================== */
+
+/* --- Light Theme (default) --- */
+:root,
+[data-theme="light"] {
+  /* Brand */
+  --nugget-primary: #F5A623;
+  --nugget-primary-dark: #D4891A;
+  --nugget-primary-light: #FFF3DC;
+
+  /* Platform */
+  --color-claude: #7C3AED;
+  --color-chatgpt: #10A37F;
+  --color-gemini: #4285F4;
+
+  /* System */
+  --bg-primary: #FFFFFF;
+  --bg-surface: #F8F9FA;
+  --bg-surface-hover: #F1F3F5;
+  --bg-elevated: #FFFFFF;
+  --border-default: #E1E4E8;
+  --border-subtle: #F1F3F5;
+  --text-primary: #1A1A2E;
+  --text-secondary: #6B7280;
+  --text-tertiary: #9CA3AF;
+  --text-on-primary: #FFFFFF;
+
+  /* State */
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+  --color-info: #3B82F6;
+  --color-pro: #8B5CF6;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.1);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
+
+  /* Overlay */
+  --overlay-bg: rgba(0, 0, 0, 0.4);
+
+  /* Skeleton */
+  --skeleton-base: #F1F3F5;
+  --skeleton-shine: #E1E4E8;
+
+  /* Search highlight */
+  --highlight-search: #FEF08A;
+
+  /* Scrollbar */
+  --scrollbar-thumb: #CCC;
+  --scrollbar-thumb-hover: #AAA;
+
+  /* Tag backgrounds (10% opacity in light) */
+  --tag-coding-bg: rgba(59, 130, 246, 0.1);
+  --tag-coding-text: #3B82F6;
+  --tag-writing-bg: rgba(16, 185, 129, 0.1);
+  --tag-writing-text: #10B981;
+  --tag-work-bg: rgba(245, 158, 11, 0.1);
+  --tag-work-text: #F59E0B;
+  --tag-study-bg: rgba(139, 92, 246, 0.1);
+  --tag-study-text: #8B5CF6;
+  --tag-creative-bg: rgba(236, 72, 153, 0.1);
+  --tag-creative-text: #EC4899;
+  --tag-other-bg: rgba(107, 114, 128, 0.1);
+  --tag-other-text: #6B7280;
+
+  /* Platform chip backgrounds (10% opacity in light) */
+  --chip-claude-bg: rgba(124, 58, 237, 0.1);
+  --chip-chatgpt-bg: rgba(16, 163, 127, 0.1);
+  --chip-gemini-bg: rgba(66, 133, 244, 0.1);
+
+  /* Spacing (unchanged from v1.0) */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+
+  /* Border Radius (unchanged) */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  /* Typography (unchanged) */
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-md: 13px;
+  --font-size-lg: 15px;
+  --font-size-xl: 17px;
+
+  /* Transition (unchanged) */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+}
+
+/* --- Dark Theme --- */
+[data-theme="dark"] {
+  /* Brand */
+  --nugget-primary: #F5A623;
+  --nugget-primary-dark: #FFB940;
+  --nugget-primary-light: #3D2E1A;
+
+  /* Platform */
+  --color-claude: #9B6BFF;
+  --color-chatgpt: #34D399;
+  --color-gemini: #60A5FA;
+
+  /* System */
+  --bg-primary: #1A1A2E;
+  --bg-surface: #252540;
+  --bg-surface-hover: #2E2E4A;
+  --bg-elevated: #2E2E4A;
+  --border-default: #3A3A5C;
+  --border-subtle: #2E2E4A;
+  --text-primary: #E8E8F0;
+  --text-secondary: #A0A0B8;
+  --text-tertiary: #6B6B85;
+  --text-on-primary: #FFFFFF;
+
+  /* State */
+  --color-success: #34D399;
+  --color-warning: #FBBF24;
+  --color-error: #F87171;
+  --color-info: #60A5FA;
+  --color-pro: #A78BFA;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.4);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.5);
+
+  /* Overlay */
+  --overlay-bg: rgba(0, 0, 0, 0.6);
+
+  /* Skeleton */
+  --skeleton-base: #252540;
+  --skeleton-shine: #3A3A5C;
+
+  /* Search highlight */
+  --highlight-search: #78500A;
+
+  /* Scrollbar */
+  --scrollbar-thumb: #3A3A5C;
+  --scrollbar-thumb-hover: #505070;
+
+  /* Tag backgrounds (15% opacity in dark) */
+  --tag-coding-bg: rgba(96, 165, 250, 0.15);
+  --tag-coding-text: #60A5FA;
+  --tag-writing-bg: rgba(52, 211, 153, 0.15);
+  --tag-writing-text: #34D399;
+  --tag-work-bg: rgba(251, 191, 36, 0.15);
+  --tag-work-text: #FBBF24;
+  --tag-study-bg: rgba(167, 139, 250, 0.15);
+  --tag-study-text: #A78BFA;
+  --tag-creative-bg: rgba(244, 114, 182, 0.15);
+  --tag-creative-text: #F472B6;
+  --tag-other-bg: rgba(156, 163, 175, 0.15);
+  --tag-other-text: #9CA3AF;
+
+  /* Platform chip backgrounds (15% opacity in dark) */
+  --chip-claude-bg: rgba(155, 107, 255, 0.15);
+  --chip-chatgpt-bg: rgba(52, 211, 153, 0.15);
+  --chip-gemini-bg: rgba(96, 165, 250, 0.15);
+}
+```
+
+### 12.4 컴포넌트별 다크모드 스타일
+
+#### 12.4.1 카드 (대화 엔트리)
+
+```css
+/* Card — light is default from v1.0, dark overrides below */
+[data-theme="dark"] .entry-card {
+  background: var(--bg-surface);
+  border-color: var(--border-default);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] .entry-card:hover {
+  background: var(--bg-surface-hover);
+  box-shadow: var(--shadow-md);
+}
+
+/* Card stripe (platform color) uses CSS variables, auto-adapts */
+/* Card question text */
+[data-theme="dark"] .card-question {
+  color: var(--text-primary);  /* #E8E8F0 */
+}
+
+/* Card answer text */
+[data-theme="dark"] .card-answer {
+  color: var(--text-secondary);  /* #A0A0B8 */
+}
+
+/* Card meta info (date, tags) */
+[data-theme="dark"] .card-meta {
+  color: var(--text-tertiary);  /* #6B6B85 */
+}
+```
+
+#### 12.4.2 버튼
+
+| 종류 | 다크 배경 | 다크 텍스트 | 다크 테두리 |
+|------|----------|-----------|-----------|
+| Primary | `var(--nugget-primary)` | `var(--text-on-primary)` | 없음 |
+| Pro | `var(--color-pro)` | `var(--text-on-primary)` | 없음 |
+| Secondary | `transparent` | `var(--text-secondary)` | 1px `var(--border-default)` |
+| Ghost | `transparent` | `var(--text-secondary)` | 없음 |
+| Danger | `rgba(248,113,113, 0.1)` | `var(--color-error)` | 1px `var(--color-error)` |
+
+```css
+/* Button hover in dark mode */
+[data-theme="dark"] .btn-primary:hover {
+  filter: brightness(1.1);  /* dark에서는 밝게 */
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+  background: var(--bg-surface-hover);
+}
+
+[data-theme="dark"] .btn-ghost:hover {
+  background: var(--bg-surface);
+}
+```
+
+**다크 버튼 hover 지침:** 라이트에서는 `brightness(0.95)` (어둡게), 다크에서는 `brightness(1.1)` (밝게)로 반전합니다.
+
+#### 12.4.3 입력 필드
+
+```css
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+}
+
+[data-theme="dark"] input:focus,
+[data-theme="dark"] textarea:focus,
+[data-theme="dark"] select:focus {
+  border-color: var(--nugget-primary);
+  box-shadow: 0 0 0 2px rgba(245, 166, 35, 0.2);
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: var(--text-tertiary);
+}
+```
+
+#### 12.4.4 토글 스위치
+
+```css
+/* Toggle — ON state uses --nugget-primary (same in both themes) */
+/* Toggle — OFF state */
+[data-theme="dark"] .toggle-track.off {
+  background: var(--border-default);  /* #3A3A5C */
+}
+```
+
+#### 12.4.5 칩 (Tag / Filter)
+
+```css
+/* Chip base — dark */
+[data-theme="dark"] .chip {
+  background: var(--bg-surface-hover);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+}
+
+/* Chip active — uses tag/platform CSS variables, auto-adapts */
+```
+
+#### 12.4.6 모달 대화상자
+
+```css
+[data-theme="dark"] .modal-backdrop {
+  background: var(--overlay-bg);  /* rgba(0,0,0,0.6) */
+}
+
+[data-theme="dark"] .modal-box {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-lg);
+}
+```
+
+#### 12.4.7 툴팁
+
+```css
+/* Tooltip is already dark-toned in light mode (rgba(26,26,46,0.9)).
+   In dark mode, invert to a lighter tooltip for contrast. */
+[data-theme="dark"] .tooltip {
+  background: var(--bg-elevated);  /* #2E2E4A */
+  color: var(--text-primary);      /* #E8E8F0 */
+  border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-md);
+}
+```
+
+#### 12.4.8 토스트 알림 (Content Script)
+
+```css
+/* Toast in dark mode — lighter background for contrast against dark sites */
+[data-theme="dark"] .nugget-toast {
+  background: rgba(46, 46, 74, 0.95);  /* --bg-elevated at 95% */
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+}
+```
+
+**토스트 다크모드 주의:** Content Script의 토스트는 AI 사이트 위에 렌더링되므로 (Shadow DOM 내부), AI 사이트의 테마가 아닌 Nugget 설정의 테마를 따릅니다. `chrome.storage`에서 theme 값을 읽어 적용합니다.
+
+#### 12.4.9 스켈레톤 로딩
+
+```css
+[data-theme="dark"] .skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--skeleton-base) 25%,
+    var(--skeleton-shine) 50%,
+    var(--skeleton-base) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+```
+
+#### 12.4.10 에러/경고 배너
+
+```css
+/* Error banner — dark */
+[data-theme="dark"] .error-banner {
+  background: rgba(248, 113, 113, 0.1);  /* error dark color at 10% */
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+/* Warning banner — dark */
+[data-theme="dark"] .warning-banner {
+  background: rgba(251, 191, 36, 0.1);
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+}
+```
+
+#### 12.4.11 포커스 링 (접근성)
+
+```css
+/* Focus ring adapts to theme */
+[data-theme="dark"] *:focus-visible {
+  outline: 2px solid var(--nugget-primary);
+  outline-offset: 2px;
+}
+```
+
+#### 12.4.12 스크롤바
+
+```css
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+```
+
+### 12.5 접근성 — 다크모드 색상 대비 검증
+
+WCAG 2.1 AA 기준: 일반 텍스트 4.5:1, 대형 텍스트(18px+) 3:1
+
+| 요소 | 전경색 (다크) | 배경색 (다크) | 대비비 | 판정 |
+|------|-------------|-------------|-------|------|
+| 본문 텍스트 | `#E8E8F0` | `#1A1A2E` | 11.2:1 | PASS (AAA) |
+| 부제목 | `#A0A0B8` | `#1A1A2E` | 5.4:1 | PASS (AA) |
+| 비활성 텍스트 | `#6B6B85` | `#1A1A2E` | 2.8:1 | 장식/힌트 전용 (주 정보에 사용 금지) |
+| Nugget Gold (CTA) | `#F5A623` | `#1A1A2E` | 4.8:1 | PASS (AA) |
+| Nugget Gold (surface) | `#F5A623` | `#252540` | 4.2:1 | PASS (AA, 대형 텍스트) |
+| Claude 보라 | `#9B6BFF` | `#1A1A2E` | 4.6:1 | PASS (AA) |
+| ChatGPT 초록 | `#34D399` | `#1A1A2E` | 7.8:1 | PASS (AAA) |
+| Gemini 파랑 | `#60A5FA` | `#1A1A2E` | 5.6:1 | PASS (AA) |
+| 카드 텍스트 | `#E8E8F0` | `#252540` | 9.1:1 | PASS (AAA) |
+| 에러 | `#F87171` | `#1A1A2E` | 4.9:1 | PASS (AA) |
+| 성공 | `#34D399` | `#1A1A2E` | 7.8:1 | PASS (AAA) |
+
+### 12.6 테마 전환 애니메이션
+
+```css
+/* Smooth theme transition — apply to body */
+body {
+  transition: background-color var(--transition-normal),
+              color var(--transition-normal);
+}
+
+/* Cards, surfaces also transition */
+.entry-card,
+.settings-section,
+input, textarea, select,
+.chip, .btn {
+  transition: background-color var(--transition-normal),
+              border-color var(--transition-normal),
+              color var(--transition-normal),
+              box-shadow var(--transition-normal);
+}
+```
+
+**주의:** `transition: all`은 사용하지 않습니다. 성능을 위해 필요한 속성만 명시합니다.
+
+---
+
+## 13. 언어 설정 UI 디자인
+
+### 13.1 언어 선택 컨트롤
+
+Options 페이지의 "일반 설정" 섹션에 언어 선택 드롭다운을 배치합니다.
+
+**컨트롤 타입:** 커스텀 `<select>` 드롭다운 (네이티브 select에 스타일 적용)
+
+```
+┌─────────────────────────────────────────┐
+│  언어 (Language)          [한국어    ▼]  │
+│                                         │
+│  · 자동 (브라우저 언어)                   │  ← 드롭다운 옵션
+│  · 한국어                                │
+│  · English                              │
+└─────────────────────────────────────────┘
+```
+
+**드롭다운 사양:**
+
+| 속성 | 값 |
+|------|-----|
+| 너비 | 160px |
+| 높이 | 36px |
+| 배경 | `var(--bg-surface)` |
+| 테두리 | 1px solid `var(--border-default)` |
+| 모서리 | `var(--radius-md)` |
+| 텍스트 | `var(--font-size-md)` (13px), `var(--text-primary)` |
+| 패딩 | 8px 12px |
+| 화살표 | 우측 12px, SVG 삼각형 (8px), `var(--text-tertiary)` |
+| focus | `border-color: var(--nugget-primary)` |
+
+**드롭다운 옵션:**
+
+| 값 | 표시 텍스트 | data 속성 |
+|-----|----------|----------|
+| `auto` | 자동 (브라우저 언어) | `data-i18n="settings_lang_auto"` |
+| `ko` | 한국어 | — |
+| `en` | English | — |
+
+**레이아웃 상세:**
+- 라벨("언어")과 드롭다운은 같은 행에 `display: flex; justify-content: space-between; align-items: center;`
+- 라벨: `var(--font-size-md)` (13px), `var(--text-primary)`, font-weight 500
+- 라벨 우측에 괄호로 영어 표기 추가 `(Language)` — i18n이 적용되지 않는 고정 텍스트로, 언어가 바뀌어도 어떤 설정인지 식별 가능
+
+### 13.2 언어 변경 시 즉시 반영 피드백
+
+```
+[한국어 ▼] → 사용자가 "English" 선택
+  ↓
+(1) 드롭다운 옆에 체크 아이콘(✓) 0.5초 표시 — 저장 완료 피드백
+  ↓
+(2) Options 페이지의 모든 i18n 텍스트 즉시 업데이트 (DOM 직접 조작)
+  ↓
+(3) chrome.storage에 settings.language 저장
+```
+
+**즉시 반영 UI:**
+- 드롭다운 우측에 16px 체크 아이콘 (`var(--color-success)`) 나타남 → 0.5초 후 페이드아웃
+- 페이지 전체 리로드 없이 `data-i18n` 속성이 있는 모든 요소의 텍스트를 JS로 업데이트
+
+### 13.3 테마 선택 컨트롤
+
+언어 선택 바로 아래에 테마 선택을 배치합니다.
+
+**컨트롤 타입:** 세그먼트 버튼 (3-way toggle) — 라디오 버튼 그룹의 시각적 변형
+
+```
+┌─────────────────────────────────────────────────────┐
+│  테마 (Theme)    [☀ 라이트] [🌙 다크] [💻 시스템]   │
+└─────────────────────────────────────────────────────┘
+```
+
+**세그먼트 버튼 사양:**
+
+| 속성 | 값 |
+|------|-----|
+| 전체 너비 | 자동 (내용물에 맞춤) |
+| 각 버튼 높이 | 32px |
+| 각 버튼 패딩 | 6px 12px |
+| 배경 (비선택) | `transparent` |
+| 배경 (선택) | `var(--nugget-primary)` |
+| 텍스트 (비선택) | `var(--text-secondary)` |
+| 텍스트 (선택) | `var(--text-on-primary)` |
+| 테두리 | 전체 그룹에 1px solid `var(--border-default)` |
+| 모서리 | 전체 그룹 `var(--radius-md)`, 내부 버튼은 0 (첫째/마지막만 좌/우 radius) |
+| 구분선 | 버튼 사이 1px solid `var(--border-default)` |
+| 텍스트 크기 | `var(--font-size-sm)` (12px) |
+| 아이콘 | 각 버튼 좌측에 14px 인라인 아이콘 |
+
+**세그먼트 버튼 옵션:**
+
+| 값 | 아이콘 | 텍스트 |
+|-----|------|--------|
+| `light` | ☀ (sun SVG) | 라이트 / Light |
+| `dark` | 🌙 (moon SVG) | 다크 / Dark |
+| `system` | 💻 (monitor SVG) | 시스템 / System |
+
+**테마 변경 시 피드백:**
+- 선택 즉시 테마가 현재 페이지에 적용 (data-theme 속성 변경)
+- 선택된 버튼에 `var(--nugget-primary)` 배경 + 흰색 텍스트
+- 전환 애니메이션은 12.6에 정의된 `transition` 적용
+- chrome.storage에 settings.theme 저장
+
+```css
+/* Segment button group */
+.theme-selector {
+  display: inline-flex;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.theme-selector__btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  border: none;
+  border-right: 1px solid var(--border-default);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.theme-selector__btn:last-child {
+  border-right: none;
+}
+
+.theme-selector__btn.active {
+  background: var(--nugget-primary);
+  color: var(--text-on-primary);
+}
+
+.theme-selector__btn:not(.active):hover {
+  background: var(--bg-surface-hover);
+}
+
+.theme-selector__btn svg {
+  width: 14px;
+  height: 14px;
+}
+```
+
+### 13.4 필요 SVG 아이콘 (v1.1 추가)
+
+| 아이콘 | 용도 | 크기 |
+|--------|------|------|
+| 태양 (sun) | 라이트 테마 버튼 | 14px |
+| 달 (moon) | 다크 테마 버튼 | 14px |
+| 모니터 (monitor) | 시스템 테마 버튼 | 14px |
+| 지구본 (globe) | 언어 설정 라벨 아이콘 (선택사항) | 16px |
+
+---
+
+## 14. Options 페이지 설정 섹션 재구성
+
+### 14.1 전체 레이아웃 (v1.1)
+
+v1.0의 기존 4개 섹션에 "일반 설정" 섹션을 확장하고, 순서를 재배치합니다.
+
+```
++--------------------------------------------------+
+|  ⚙ Nugget 설정                                   |
++--------------------------------------------------+
+|                                                    |
+|  ┌─ 일반 설정 ──────────────────────────────┐     |
+|  │  언어 (Language)       [한국어        ▼]  │     |  ← NEW (v1.1)
+|  │  테마 (Theme)   [☀라이트][🌙다크][💻시스템]│     |  ← NEW (v1.1)
+|  │  ─────────────────────────────────────── │     |  ← 구분선
+|  │  토스트 알림           [ON ■□ OFF]        │     |
+|  │  잡담 필터             [ON ■□ OFF]        │     |
+|  │  단축키                [Ctrl+Shift+S] [변경]│    |
+|  └──────────────────────────────────────────┘     |
+|                                                    |
+|  ┌─ 잡담 키워드 관리 ───────────────────────┐     |
+|  │  (v1.0과 동일)                            │     |
+|  └──────────────────────────────────────────┘     |
+|                                                    |
+|  ┌─ 데이터 관리 ────────────────────────────┐     |
+|  │  (v1.0과 동일)                            │     |
+|  └──────────────────────────────────────────┘     |
+|                                                    |
+|  ┌─ Pro 구독 ───────────────────────────────┐     |
+|  │  (v1.0과 동일)                            │     |
+|  └──────────────────────────────────────────┘     |
+|                                                    |
+|  Nugget v1.1.0                                    |
++--------------------------------------------------+
+```
+
+### 14.2 일반 설정 섹션 상세 (v1.1 확장)
+
+기존 v1.0 일반 설정 항목 **위에** 언어와 테마 설정을 배치하고, 시각적 구분선으로 그룹을 나눕니다.
+
+```
+┌─ 일반 설정 ────────────────────────────────────────┐
+│                                                     │
+│  🌐 언어 (Language)              [한국어        ▼]  │
+│                                                     │
+│  🎨 테마 (Theme)       [☀ 라이트][🌙 다크][💻 시스템]│
+│                                                     │
+│  ──────────────────────────────────────────────── │  ← HR 구분선
+│                                                     │
+│  🔔 토스트 알림                    [ON ■□ OFF]      │
+│                                                     │
+│  🗑 잡담 필터                      [ON ■□ OFF]      │
+│                                                     │
+│  ⌨ 단축키                   [Ctrl+Shift+S] [변경]   │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+```
+
+**구분선 스타일:**
+```css
+.settings-divider {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: var(--space-lg) 0;  /* 16px 상하 여백 */
+}
+```
+
+**설정 항목 공통 레이아웃:**
+```css
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-md) 0;  /* 12px 상하 */
+  min-height: 44px;  /* 터치 접근성 */
+}
+
+.setting-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);  /* 8px */
+  font-size: var(--font-size-md);  /* 13px */
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.setting-label__sub {
+  font-weight: 400;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-sm);  /* 12px */
+  margin-left: var(--space-xs);  /* 4px */
+}
+```
+
+### 14.3 설정 섹션 카드 스타일 (다크모드 대응)
+
+```css
+.settings-section {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);  /* 12px */
+  padding: var(--space-xl);  /* 24px */
+  margin-bottom: var(--space-xl);
+}
+
+.settings-section__title {
+  font-size: var(--font-size-lg);  /* 15px */
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-lg);  /* 16px */
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--border-default);
+}
+```
+
+### 14.4 설정 변경 즉시 반영 피드백 UI (공통)
+
+모든 설정 항목에 통일된 저장 피드백을 적용합니다:
+
+```
+[설정 변경] → 0.3초 안에 체크 아이콘 나타남 → 0.5초 유지 → 페이드아웃
+```
+
+**피드백 아이콘 스타일:**
+```css
+.setting-saved-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-success);
+  font-size: var(--font-size-xs);  /* 11px */
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.setting-saved-indicator.visible {
+  opacity: 1;
+}
+```
+
+**동작 방식:**
+- 설정 변경 시 해당 행의 우측 끝(컨트롤 다음)에 체크 아이콘 + "저장됨" 텍스트가 나타남
+- 0.5초 후 페이드아웃
+- 에러 시: X 아이콘 + "저장 실패" 텍스트 (`var(--color-error)`)
+
+### 14.5 설정 페이지 다크모드 미리보기
+
+Options 페이지에서 테마를 변경하면, 현재 페이지에서 **즉시** 다크모드가 적용되어 사용자가 바로 결과를 확인할 수 있습니다. 이것은 사용자에게 가장 직관적인 피드백입니다.
+
+### 14.6 Options 페이지 상단 헤더 (v1.1)
+
+```css
+.options-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+}
+
+.options-header__icon {
+  width: 32px;
+  height: 32px;
+}
+
+.options-header__title {
+  font-size: var(--font-size-xl);  /* 17px */
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.options-header__version {
+  font-size: var(--font-size-xs);  /* 11px */
+  color: var(--text-tertiary);
+  margin-left: auto;
+}
+```
+
+---
+
+## 15. 페이지별 다크모드 적용 상세
+
+### 15.1 Popup 다크모드
+
+| 영역 | 라이트 배경 | 다크 배경 | 비고 |
+|------|-----------|---------|------|
+| Today's Nugget | `--nugget-primary-light` (#FFF3DC) | `--nugget-primary-light` (#3D2E1A) | 자동 전환 |
+| 검색바 | `--bg-surface` | `--bg-surface` | 자동 전환 |
+| 카드 리스트 배경 | `--bg-primary` | `--bg-primary` | 자동 전환 |
+| 개별 카드 | `--bg-primary` (white) | `--bg-surface` (#252540) | 다크에서는 surface 사용 |
+| 미니 통계 | `--bg-surface` | `--bg-surface` | 자동 전환 |
+| 하단 버튼 영역 | `--bg-primary` | `--bg-primary` | 자동 전환 |
+| 용량 경고 배너 | 노란 투명 | 노란 투명 | 색상 변수가 자동 적용 |
+
+### 15.2 Options 다크모드
+
+전체 페이지 배경이 `--bg-primary`로 전환되고, 각 설정 섹션 카드는 `--bg-primary`에서 `--bg-surface`로 시각적 분리를 만듭니다.
+
+```css
+[data-theme="dark"] .options-page {
+  background: var(--bg-primary);
+}
+
+[data-theme="dark"] .settings-section {
+  background: var(--bg-surface);
+  border-color: var(--border-default);
+}
+```
+
+### 15.3 Onboarding 다크모드
+
+| 영역 | 라이트 | 다크 |
+|------|--------|------|
+| 전체 배경 | `#FFFFFF` | `--bg-primary` |
+| 샘플 카드 | 카드 스타일 그대로 | 다크 카드 스타일 |
+| CTA 버튼 | `--nugget-primary` | `--nugget-primary` (변경 없음) |
+| Pro 미리보기 박스 | `--bg-surface` | `--bg-surface` |
+
+### 15.4 토스트 다크모드 (Content Script)
+
+Content Script의 토스트는 Shadow DOM 안에서 독립적으로 렌더링됩니다. Nugget의 테마 설정을 `chrome.storage`에서 읽어 적용합니다.
+
+```js
+// Toast theme initialization pseudo-code (inside Shadow DOM)
+async function getToastTheme() {
+  const { nugget_settings } = await chrome.storage.local.get('nugget_settings');
+  const theme = nugget_settings?.theme || 'system';
+  if (theme === 'system') {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  return theme;
+}
+```
+
+---
+
+## 16. 사용자 동선 추가 (v1.1)
+
+### 16.1 테마 변경 동선
+
+```
+사용자가 Options 페이지 열기
+  ↓
+일반 설정 > 테마에서 "다크" 선택
+  ↓
+Options 페이지 즉시 다크 테마로 전환 (250ms 트랜지션)
+  ↓
+settings.theme = 'dark' 저장 (chrome.storage)
+  ↓
+Popup 다음 열 때 다크 테마 적용
+  ↓
+Content Script 토스트: chrome.storage.onChanged로 테마 변경 감지 → 다음 토스트부터 적용
+```
+
+### 16.2 언어 변경 동선
+
+```
+사용자가 Options 페이지 열기
+  ↓
+일반 설정 > 언어에서 "English" 선택
+  ↓
+체크 아이콘 피드백 (0.5초)
+  ↓
+Options 페이지의 모든 텍스트 즉시 영어로 변경 (리로드 없음, AC-V11-12)
+  ↓
+settings.language = 'en' 저장 (chrome.storage)
+  ↓
+Popup 다음 열 때 영어 적용
+  ↓
+Content Script 토스트: chrome.storage.onChanged로 언어 변경 감지 → 다음 토스트부터 적용 (AC-V11-14)
+```
+
+---
+
+## 17. i18n 텍스트 마킹 가이드
+
+프론트엔드 개발자는 HTML에서 i18n 대상 텍스트를 `data-i18n` 속성으로 마킹합니다.
+
+### 17.1 마킹 규칙
+
+```html
+<!-- 텍스트 노드 교체 -->
+<span data-i18n="popup_search_placeholder"></span>
+
+<!-- placeholder 교체 -->
+<input data-i18n-placeholder="popup_search_placeholder">
+
+<!-- aria-label 교체 -->
+<button data-i18n-aria="btn_close_aria"></button>
+
+<!-- title 속성 교체 -->
+<div data-i18n-title="card_date_tooltip"></div>
+```
+
+### 17.2 i18n 키 네이밍 컨벤션
+
+```
+{페이지}_{섹션}_{요소}
+
+예:
+  popup_search_placeholder     → "대화 검색..."
+  popup_filter_platform_claude → "Claude"
+  popup_stat_this_month        → "이번 달"
+  options_general_title        → "일반 설정"
+  options_general_language     → "언어"
+  options_general_theme        → "테마"
+  options_general_toast        → "토스트 알림"
+  options_general_junk_filter  → "잡담 필터"
+  toast_saved                  → "Nugget이 저장했어요"
+  toast_star_added             → "별표 추가"
+  toast_star_removed           → "별표 해제"
+  onboarding_welcome_title     → "Nugget에 오신 것을 환영해요!"
+  common_save                  → "저장"
+  common_cancel                → "취소"
+  common_close                 → "닫기"
+  theme_light                  → "라이트"
+  theme_dark                   → "다크"
+  theme_system                 → "시스템"
+  settings_lang_auto           → "자동 (브라우저 언어)"
+```
+
+### 17.3 고정 텍스트 (i18n 미적용)
+
+일부 텍스트는 언어 설정에 관계없이 고정입니다:
+
+| 텍스트 | 이유 |
+|--------|------|
+| "Nugget" (브랜드명) | 고유명사 |
+| "Claude", "ChatGPT", "Gemini" | 플랫폼 고유명사 |
+| "Pro" | 플랜 명칭 |
+| "v1.1.0" | 버전 번호 |
+| 드롭다운의 "한국어", "English" | 언어 이름은 해당 언어로 표기 |
+
+---
+
+## 18. 다크모드 관련 추가 접근성 고려사항
+
+### 18.1 prefers-color-scheme 미디어 쿼리
+
+`system` 모드일 때 OS 테마 변경을 실시간 감지합니다.
+
+```js
+// System theme change listener
+const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+mediaQuery.addEventListener('change', (e) => {
+  if (currentThemeSetting === 'system') {
+    applyTheme('system');
+  }
+});
+```
+
+### 18.2 prefers-reduced-motion + 다크모드
+
+테마 전환 애니메이션도 reduced-motion 설정을 존중합니다:
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  body,
+  .entry-card,
+  .settings-section,
+  input, textarea, select,
+  .chip, .btn {
+    transition-duration: 0.01ms !important;
+  }
+}
+```
+
+### 18.3 고대비 모드 (High Contrast)
+
+향후 고대비 모드 지원을 위해, 다크 테마의 `--text-primary`를 `#E8E8F0`(순백이 아닌 약간 차분한 흰색)으로 설정했습니다. 순백(`#FFFFFF`)은 다크 배경에서 눈부심을 유발할 수 있습니다.
+
+---
+
+## 19. 디자인 토큰 요약 (v1.1 변경 목록)
+
+### 19.1 신규 CSS 변수
+
+| 변수명 | 라이트 | 다크 | 용도 |
+|--------|--------|------|------|
+| `--bg-elevated` | `#FFFFFF` | `#2E2E4A` | 모달, 드롭다운 배경 |
+| `--border-subtle` | `#F1F3F5` | `#2E2E4A` | 약한 구분선 |
+| `--text-on-primary` | `#FFFFFF` | `#FFFFFF` | Primary 배경 위 텍스트 |
+| `--overlay-bg` | `rgba(0,0,0,0.4)` | `rgba(0,0,0,0.6)` | 모달 오버레이 |
+| `--skeleton-base` | `#F1F3F5` | `#252540` | 스켈레톤 기본 |
+| `--skeleton-shine` | `#E1E4E8` | `#3A3A5C` | 스켈레톤 shimmer |
+| `--highlight-search` | `#FEF08A` | `#78500A` | 검색 하이라이트 |
+| `--scrollbar-thumb` | `#CCC` | `#3A3A5C` | 스크롤바 |
+| `--scrollbar-thumb-hover` | `#AAA` | `#505070` | 스크롤바 hover |
+| `--tag-*-bg` | (각 태그별) | (각 태그별) | 태그 배경 |
+| `--tag-*-text` | (각 태그별) | (각 태그별) | 태그 텍스트 |
+| `--chip-*-bg` | (각 플랫폼별) | (각 플랫폼별) | 플랫폼 칩 배경 |
+
+### 19.2 v1.0에서 변경된 값 (다크 테마에서만)
+
+| 변수명 | v1.0 값 | 다크 값 | 변경 이유 |
+|--------|---------|---------|----------|
+| `--nugget-primary-dark` | `#D4891A` | `#FFB940` | hover 시인성 |
+| `--nugget-primary-light` | `#FFF3DC` | `#3D2E1A` | 배경 톤 반전 |
+| `--color-claude` | `#7C3AED` | `#9B6BFF` | 대비 확보 |
+| `--color-chatgpt` | `#10A37F` | `#34D399` | 대비 확보 |
+| `--color-gemini` | `#4285F4` | `#60A5FA` | 대비 확보 |
+| `--color-success` | `#22C55E` | `#34D399` | 대비 확보 |
+| `--color-warning` | `#F59E0B` | `#FBBF24` | 대비 확보 |
+| `--color-error` | `#EF4444` | `#F87171` | 대비 확보 |
+| `--color-info` | `#3B82F6` | `#60A5FA` | 대비 확보 |
+| `--color-pro` | `#8B5CF6` | `#A78BFA` | 대비 확보 |
+
+### 19.3 라이트 테마에서 변경 없는 항목
+
+v1.0의 `:root` CSS 변수 값은 모두 그대로 유지됩니다. `[data-theme="light"]` 셀렉터를 추가하되, 값은 v1.0과 동일합니다. 이로써 v1.0 → v1.1 마이그레이션 시 시각적 변화가 없습니다.
