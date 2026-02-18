@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nugget에 오신 것을 환영해요!</title>
+  <link rel="stylesheet" href="onboarding.css" />
+</head>
+<body>
+
+  <div class="onboarding-container">
+
+    <!-- 히어로 영역 -->
+    <header class="hero">
+      <div class="hero__icon" aria-hidden="true">🥜</div>
+      <h1 class="hero__title">Nugget에 오신 것을 환영해요!</h1>
+      <p class="hero__subtitle">AI 대화를 자동으로 저장하고 나중에 쉽게 찾아보세요</p>
+    </header>
+
+    <!-- ① 자동 저장 안내 -->
+    <section class="feature-section" aria-label="자동 저장">
+      <div class="feature-header">
+        <span class="feature-number" aria-hidden="true">①</span>
+        <h2 class="feature-title">자동 저장</h2>
+      </div>
+
+      <!-- 샘플 카드 (AC-21) — 실제 카드 UI와 동일한 스타일 -->
+      <div class="sample-card" aria-label="샘플 대화 카드">
+        <div class="sample-card__stripe" aria-hidden="true"></div>
+        <div class="sample-card__content">
+          <div class="sample-card__header">
+            <span class="platform-avatar platform-avatar--claude" aria-label="Claude">C</span>
+            <span class="sample-card__platform">Claude</span>
+            <span class="sample-card__date">오늘 14:30</span>
+          </div>
+          <p class="sample-card__question">
+            <span class="sample-card__q-label" aria-hidden="true">Q</span>
+            React에서 상태관리 어떻게 하나요?
+          </p>
+          <p class="sample-card__answer">
+            React에서 상태를 관리하는 방법은 여러 가지가 있습니다. useState는 컴포넌트 내부 상태를, useReducer는 복잡한 상태 로직을 관리하는 데 쓰입니다...
+          </p>
+          <div class="sample-card__meta">
+            <span class="tag-chip tag-chip--코딩">코딩</span>
+            <span class="tag-chip tag-chip--학습">학습</span>
+            <span class="sample-card__star" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polygon points="8,2 10,6 14,6.5 11,9.5 12,14 8,11.5 4,14 5,9.5 2,6.5 6,6"/>
+              </svg>
+            </span>
+            <span class="sample-card__md" aria-hidden="true">MD</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="feature-desc">
+        Claude, ChatGPT, Gemini에서의 대화가 자동으로 저장돼요.
+        확장 프로그램이 알아서 챙기니까 신경 쓸 필요 없어요.
+      </p>
+    </section>
+
+    <!-- ② 똑똑한 정리 -->
+    <section class="feature-section" aria-label="자동 정리">
+      <div class="feature-header">
+        <span class="feature-number" aria-hidden="true">②</span>
+        <h2 class="feature-title">똑똑한 정리</h2>
+      </div>
+      <p class="feature-desc">
+        자동 태그 (#코딩, #글쓰기, #업무 등)와 잡담 필터로
+        중요한 대화만 모아줘요. 인사말이나 짧은 잡담은 따로 분류돼요.
+      </p>
+      <div class="feature-tags-demo" aria-hidden="true">
+        <span class="tag-chip tag-chip--코딩">코딩</span>
+        <span class="tag-chip tag-chip--글쓰기">글쓰기</span>
+        <span class="tag-chip tag-chip--업무">업무</span>
+        <span class="tag-chip tag-chip--학습">학습</span>
+        <span class="tag-chip tag-chip--크리에이티브">크리에이티브</span>
+      </div>
+    </section>
+
+    <!-- ③ 빠른 검색 -->
+    <section class="feature-section" aria-label="검색">
+      <div class="feature-header">
+        <span class="feature-number" aria-hidden="true">③</span>
+        <h2 class="feature-title">빠른 검색</h2>
+      </div>
+      <p class="feature-desc">
+        키워드, 플랫폼, 날짜, 태그로 원하는 대화를 바로 찾아요.
+        검색어는 노란색으로 하이라이팅되어 한눈에 보여요.
+      </p>
+      <div class="search-demo" aria-hidden="true">
+        <div class="search-demo__bar">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <circle cx="6.5" cy="6.5" r="4.5"/>
+            <line x1="10.5" y1="10.5" x2="14" y2="14"/>
+          </svg>
+          <span>React 상태관리</span>
+        </div>
+        <p class="search-demo__result">
+          <mark class="search-highlight">React</mark>에서 <mark class="search-highlight">상태</mark>를 관리하는 방법은...
+        </p>
+      </div>
+    </section>
+
+    <!-- ④ 단축키 -->
+    <section class="feature-section" aria-label="단축키">
+      <div class="feature-header">
+        <span class="feature-number" aria-hidden="true">④</span>
+        <h2 class="feature-title">단축키</h2>
+      </div>
+      <p class="feature-desc">
+        가장 최근 대화에 바로 별표를 달 수 있어요.
+        중요한 대화를 나중에 쉽게 찾아보세요.
+      </p>
+      <div class="shortcut-demo" aria-label="단축키: Ctrl+Shift+S">
+        <kbd class="key-chip">Ctrl</kbd>
+        <span class="key-plus" aria-hidden="true">+</span>
+        <kbd class="key-chip">Shift</kbd>
+        <span class="key-plus" aria-hidden="true">+</span>
+        <kbd class="key-chip">S</kbd>
+        <span class="shortcut-desc">→ 별표 토글</span>
+      </div>
+    </section>
+
+    <!-- Pro 소개 (AC-21, AC-24 — 가볍게) -->
+    <section class="pro-preview" aria-label="Pro 플랜 소개">
+      <div class="pro-preview__inner">
+        <div class="pro-preview__header">
+          <span class="pro-badge">PRO</span>
+          <h2 class="pro-preview__title">Pro로 더 많이 활용하세요</h2>
+        </div>
+        <ul class="pro-preview__list">
+          <li>무제한 저장 (무료: 500개)</li>
+          <li>커스텀 태그 추가</li>
+          <li>무제한 Markdown 복사</li>
+          <li>PDF / Markdown 파일 내보내기</li>
+        </ul>
+        <button class="btn-pro-later" id="btn-pro-later">나중에 알아보기</button>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <div class="cta-area">
+      <button class="btn-start" id="btn-start">
+        Nugget 시작하기
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <line x1="4" y1="9" x2="14" y2="9"/>
+          <polyline points="10,5 14,9 10,13"/>
+        </svg>
+      </button>
+      <p class="cta-hint">Claude, ChatGPT, Gemini에서 대화를 시작하면 자동으로 저장돼요</p>
+    </div>
+
+  </div>
+
+  <script src="onboarding.js"></script>
+</body>
+</html>
