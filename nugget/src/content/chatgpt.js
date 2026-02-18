@@ -3,6 +3,8 @@
  *
  * DESIGN.md 섹션 6.1, 9.4 기준.
  * chatgpt.com / chat.openai.com에서 대화를 감지하고 저장합니다.
+ * [v1.1] DOM 셀렉터 폴백 전용 (API 캡처가 메인 경로, AC-V11-2).
+ * [v1.1] SAVE_ENTRY 발송 전 500ms 지연 추가 (API_CAPTURE 중복 방지, AC-V11-4a).
  *
  * 주입 순서 (manifest.json):
  *   1. src/shared/types.js
@@ -17,6 +19,7 @@
 
   const PLATFORM = 'chatgpt'; // PLATFORM_CHATGPT
   const DEBOUNCE_MS = 1000;   // STREAMING_DEBOUNCE_MS
+  const SAVE_ENTRY_DEDUP_DELAY_MS = 500; // [v1.1] API 캡처 중복 방지 대기 (AC-V11-4a)
 
   // 이미 처리한 답변 DOM 요소를 추적 (중복 저장 방지)
   const processedElements = new WeakSet();
@@ -126,6 +129,9 @@
 
       processedElements.add(answerElement);
 
+      // [v1.1] 500ms 추가 지연: API_CAPTURE가 먼저 Background에 도달할 여유 (AC-V11-4a)
+      await new Promise(resolve => setTimeout(resolve, SAVE_ENTRY_DEDUP_DELAY_MS));
+
       try {
         const response = await chrome.runtime.sendMessage({
           type: 'SAVE_ENTRY',
@@ -138,6 +144,7 @@
         });
 
         // toastEnabled 확인 후 토스트 표시 (AC-19)
+        // [v1.1] API 캡처 중복으로 무시된 경우 토스트 표시 안 함
         if (response && response.success && response.toastEnabled !== false) {
           showToast('💾 Nugget이 저장했어요');
         }

@@ -143,10 +143,30 @@ async function sendMsg(type, payload = {}) {
 }
 
 // =============================================
+// [v1.1] i18n / 테마 초기화
+// =============================================
+
+/**
+ * i18n.js와 theme.js가 utils/에서 로드된 후 초기화
+ * HTML에서 i18n.js와 theme.js가 먼저 로드되어야 함
+ */
+function initI18nAndTheme() {
+  // theme.js가 로드되었으면 테마 적용
+  if (typeof applyTheme === 'function') {
+    applyTheme();
+  }
+  // i18n.js가 로드되었으면 번역 적용
+  if (typeof initI18n === 'function') {
+    initI18n();
+  }
+}
+
+// =============================================
 // 초기화
 // =============================================
 
 async function init() {
+  initI18nAndTheme();
   bindEvents();
   await loadInitialData();
 }

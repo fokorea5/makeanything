@@ -13,11 +13,11 @@
     <div class="todays-nugget__inner">
       <span class="todays-nugget__icon" aria-hidden="true">🥜</span>
       <div class="todays-nugget__content">
-        <span class="todays-nugget__label">Today's Nugget</span>
+        <span class="todays-nugget__label" data-i18n="popup_todays_nugget_label">Today's Nugget</span>
         <p class="todays-nugget__text" id="todays-nugget-text"></p>
       </div>
     </div>
-    <button class="todays-nugget__close icon-btn" id="btn-dismiss-nugget" aria-label="Today's Nugget 닫기">
+    <button class="todays-nugget__close icon-btn" id="btn-dismiss-nugget" data-i18n-aria="popup_todays_nugget_close_aria" aria-label="Today's Nugget 닫기">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <line x1="4" y1="4" x2="12" y2="12"/>
         <line x1="12" y1="4" x2="4" y2="12"/>
@@ -32,9 +32,9 @@
       <line x1="8" y1="5" x2="8" y2="8"/>
       <circle cx="8" cy="11" r="0.5" fill="currentColor" stroke="none"/>
     </svg>
-    <span id="error-banner-text">대화 저장이 일시 중단됐어요. 업데이트를 확인해 주세요.</span>
-    <a id="error-banner-link" href="#" target="_blank" class="error-banner__link">업데이트 확인</a>
-    <button id="btn-close-error" class="icon-btn error-banner__close" aria-label="닫기">
+    <span id="error-banner-text" data-i18n="popup_error_banner_text">대화 저장이 일시 중단됐어요. 업데이트를 확인해 주세요.</span>
+    <a id="error-banner-link" href="#" target="_blank" class="error-banner__link" data-i18n="popup_error_banner_link">업데이트 확인</a>
+    <button id="btn-close-error" class="icon-btn error-banner__close" data-i18n-aria="popup_error_banner_close_aria" aria-label="닫기">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <line x1="3" y1="3" x2="11" y2="11"/>
         <line x1="11" y1="3" x2="3" y2="11"/>
@@ -49,9 +49,9 @@
       <line x1="8" y1="7" x2="8" y2="10"/>
       <circle cx="8" cy="12" r="0.5" fill="currentColor" stroke="none"/>
     </svg>
-    <span id="capacity-banner-text">저장 공간이 80%가 됐어요. 백업을 추천해요!</span>
-    <button id="btn-upgrade-capacity" class="capacity-banner__upgrade" hidden>Pro 업그레이드</button>
-    <button id="btn-close-capacity" class="icon-btn capacity-banner__close" aria-label="닫기">
+    <span id="capacity-banner-text" data-i18n="popup_capacity_banner_80">저장 공간이 80%가 됐어요. 백업을 추천해요!</span>
+    <button id="btn-upgrade-capacity" class="capacity-banner__upgrade" hidden data-i18n="popup_capacity_upgrade">Pro 업그레이드</button>
+    <button id="btn-close-capacity" class="icon-btn capacity-banner__close" data-i18n-aria="popup_capacity_close_aria" aria-label="닫기">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <line x1="3" y1="3" x2="11" y2="11"/>
         <line x1="11" y1="3" x2="3" y2="11"/>
@@ -61,7 +61,7 @@
 
   <!-- ② 검색바 -->
   <div class="search-bar" role="search">
-    <label for="search-input" class="sr-only">대화 검색</label>
+    <label for="search-input" class="sr-only" data-i18n="popup_search_label">대화 검색</label>
     <svg class="search-bar__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
       <circle cx="6.5" cy="6.5" r="4.5"/>
       <line x1="10.5" y1="10.5" x2="14" y2="14"/>
@@ -73,12 +73,15 @@
       placeholder="대화 검색..."
       aria-label="대화 검색"
       autocomplete="off"
+      data-i18n-placeholder="popup_search_placeholder"
+      data-i18n-aria="popup_search_label"
     />
     <button
       id="btn-filter-toggle"
       class="search-bar__filter-btn"
       aria-expanded="false"
       aria-controls="filter-panel"
+      data-i18n-title="popup_search_filter_title"
       title="필터"
     >
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
@@ -86,59 +89,59 @@
         <line x1="4" y1="8" x2="12" y2="8"/>
         <line x1="6" y1="12" x2="10" y2="12"/>
       </svg>
-      <span>필터</span>
+      <span data-i18n="popup_search_filter_title">필터</span>
       <span class="filter-active-dot" id="filter-active-dot" hidden aria-hidden="true"></span>
     </button>
   </div>
 
   <!-- ③ 필터 행 (기본 숨김) -->
-  <div id="filter-panel" class="filter-panel" hidden aria-label="필터 옵션">
+  <div id="filter-panel" class="filter-panel" hidden data-i18n-aria="popup_filter_aria" aria-label="필터 옵션">
     <!-- 플랫폼 필터 -->
     <div class="filter-row">
       <button class="filter-chip platform-chip" data-platform="claude" aria-pressed="false">
-        <span class="platform-avatar platform-avatar--claude">C</span> Claude
+        <span class="platform-avatar platform-avatar--claude">C</span> <span data-i18n="popup_filter_platform_claude">Claude</span>
       </button>
       <button class="filter-chip platform-chip" data-platform="chatgpt" aria-pressed="false">
-        <span class="platform-avatar platform-avatar--chatgpt">G</span> ChatGPT
+        <span class="platform-avatar platform-avatar--chatgpt">G</span> <span data-i18n="popup_filter_platform_chatgpt">ChatGPT</span>
       </button>
       <button class="filter-chip platform-chip" data-platform="gemini" aria-pressed="false">
-        <span class="platform-avatar platform-avatar--gemini">Ge</span> Gemini
+        <span class="platform-avatar platform-avatar--gemini">Ge</span> <span data-i18n="popup_filter_platform_gemini">Gemini</span>
       </button>
 
       <!-- 기간 필터 -->
       <div class="filter-dropdown-wrap">
         <button class="filter-chip filter-chip--dropdown" id="btn-period-filter" aria-haspopup="true" aria-expanded="false">
-          기간 <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,3 5,7 8,3"/></svg>
+          <span data-i18n="popup_filter_period">기간</span> <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,3 5,7 8,3"/></svg>
         </button>
-        <div id="period-dropdown" class="filter-dropdown" hidden role="listbox" aria-label="기간 선택">
-          <button class="filter-dropdown__item" data-period="all" role="option" aria-selected="true">전체</button>
-          <button class="filter-dropdown__item" data-period="today" role="option" aria-selected="false">오늘</button>
-          <button class="filter-dropdown__item" data-period="week" role="option" aria-selected="false">이번 주</button>
-          <button class="filter-dropdown__item" data-period="month" role="option" aria-selected="false">이번 달</button>
-          <button class="filter-dropdown__item" data-period="custom" role="option" aria-selected="false">직접 설정</button>
+        <div id="period-dropdown" class="filter-dropdown" hidden role="listbox" data-i18n-aria="popup_filter_period" aria-label="기간 선택">
+          <button class="filter-dropdown__item" data-period="all" role="option" aria-selected="true" data-i18n="popup_filter_period_all">전체</button>
+          <button class="filter-dropdown__item" data-period="today" role="option" aria-selected="false" data-i18n="popup_filter_period_today">오늘</button>
+          <button class="filter-dropdown__item" data-period="week" role="option" aria-selected="false" data-i18n="popup_filter_period_week">이번 주</button>
+          <button class="filter-dropdown__item" data-period="month" role="option" aria-selected="false" data-i18n="popup_filter_period_month">이번 달</button>
+          <button class="filter-dropdown__item" data-period="custom" role="option" aria-selected="false" data-i18n="popup_filter_period_custom">직접 설정</button>
         </div>
       </div>
 
       <!-- 날짜 범위 (직접 설정 선택 시 노출) -->
       <div id="custom-date-range" class="custom-date-range" hidden>
-        <input type="date" id="date-from" class="date-input" aria-label="시작 날짜" />
+        <input type="date" id="date-from" class="date-input" data-i18n-aria="popup_date_from_aria" aria-label="시작 날짜" />
         <span class="date-range-sep">~</span>
-        <input type="date" id="date-to" class="date-input" aria-label="종료 날짜" />
+        <input type="date" id="date-to" class="date-input" data-i18n-aria="popup_date_to_aria" aria-label="종료 날짜" />
       </div>
 
       <!-- 태그 필터 -->
       <div class="filter-dropdown-wrap">
         <button class="filter-chip filter-chip--dropdown" id="btn-tag-filter" aria-haspopup="true" aria-expanded="false">
-          태그 <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,3 5,7 8,3"/></svg>
+          <span data-i18n="popup_filter_tag">태그</span> <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,3 5,7 8,3"/></svg>
         </button>
-        <div id="tag-dropdown" class="filter-dropdown" hidden role="listbox" aria-label="태그 선택">
-          <button class="filter-dropdown__item" data-tag="all" role="option" aria-selected="true">전체</button>
-          <button class="filter-dropdown__item" data-tag="코딩" role="option" aria-selected="false">코딩</button>
-          <button class="filter-dropdown__item" data-tag="글쓰기" role="option" aria-selected="false">글쓰기</button>
-          <button class="filter-dropdown__item" data-tag="업무" role="option" aria-selected="false">업무</button>
-          <button class="filter-dropdown__item" data-tag="학습" role="option" aria-selected="false">학습</button>
-          <button class="filter-dropdown__item" data-tag="크리에이티브" role="option" aria-selected="false">크리에이티브</button>
-          <button class="filter-dropdown__item" data-tag="기타" role="option" aria-selected="false">기타</button>
+        <div id="tag-dropdown" class="filter-dropdown" hidden role="listbox" data-i18n-aria="popup_filter_tag" aria-label="태그 선택">
+          <button class="filter-dropdown__item" data-tag="all" role="option" aria-selected="true" data-i18n="popup_filter_tag_all">전체</button>
+          <button class="filter-dropdown__item" data-tag="코딩" role="option" aria-selected="false" data-i18n="popup_filter_tag_coding">코딩</button>
+          <button class="filter-dropdown__item" data-tag="글쓰기" role="option" aria-selected="false" data-i18n="popup_filter_tag_writing">글쓰기</button>
+          <button class="filter-dropdown__item" data-tag="업무" role="option" aria-selected="false" data-i18n="popup_filter_tag_work">업무</button>
+          <button class="filter-dropdown__item" data-tag="학습" role="option" aria-selected="false" data-i18n="popup_filter_tag_study">학습</button>
+          <button class="filter-dropdown__item" data-tag="크리에이티브" role="option" aria-selected="false" data-i18n="popup_filter_tag_creative">크리에이티브</button>
+          <button class="filter-dropdown__item" data-tag="기타" role="option" aria-selected="false" data-i18n="popup_filter_tag_other">기타</button>
         </div>
       </div>
     </div>
@@ -146,17 +149,17 @@
     <div class="filter-row filter-row--toggles">
       <button class="filter-chip filter-chip--toggle" id="btn-starred-filter" aria-pressed="false">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><polygon points="8,2 10,6 14,6.5 11,9.5 12,14 8,11.5 4,14 5,9.5 2,6.5 6,6"/></svg>
-        별표만
+        <span data-i18n="popup_filter_starred">별표만</span>
       </button>
       <button class="filter-chip filter-chip--toggle" id="btn-junk-filter" aria-pressed="false">
-        잡담 포함
+        <span data-i18n="popup_filter_junk">잡담 포함</span>
       </button>
-      <button class="filter-reset" id="btn-filter-reset">필터 초기화</button>
+      <button class="filter-reset" id="btn-filter-reset" data-i18n="popup_filter_reset">필터 초기화</button>
     </div>
   </div>
 
   <!-- ④ 카드 리스트 (스크롤 영역) -->
-  <main id="card-list" class="card-list" aria-label="저장된 대화 목록" aria-live="polite">
+  <main id="card-list" class="card-list" data-i18n-aria="popup_card_list_aria" aria-label="저장된 대화 목록" aria-live="polite">
     <!-- 로딩 스켈레톤 -->
     <div id="skeleton-loader" class="skeleton-container">
       <div class="skeleton-card">
@@ -185,9 +188,9 @@
           <circle cx="29" cy="19" r="1.5" fill="currentColor"/>
         </svg>
       </div>
-      <p class="empty-state__title" id="empty-state-title">아직 저장된 대화가 없어요</p>
-      <p class="empty-state__desc" id="empty-state-desc">AI 사이트에서 대화를 시작해 보세요</p>
-      <button class="btn-text" id="btn-empty-reset-filter" hidden>필터 초기화</button>
+      <p class="empty-state__title" id="empty-state-title" data-i18n="popup_empty_title">아직 저장된 대화가 없어요</p>
+      <p class="empty-state__desc" id="empty-state-desc" data-i18n="popup_empty_desc">AI 사이트에서 대화를 시작해 보세요</p>
+      <button class="btn-text" id="btn-empty-reset-filter" hidden data-i18n="popup_empty_reset_filter">필터 초기화</button>
     </div>
 
     <!-- 카드들이 여기에 동적으로 추가됩니다 -->
@@ -195,7 +198,7 @@
   </main>
 
   <!-- ⑤ 미니 통계 (AC-25) -->
-  <div class="mini-stats" id="mini-stats" aria-label="이번 달 통계">
+  <div class="mini-stats" id="mini-stats" data-i18n-aria="popup_stat_aria" aria-label="이번 달 통계">
     <span class="mini-stats__item" id="stat-count">이번 달: -</span>
     <span class="mini-stats__divider" aria-hidden="true">|</span>
     <span class="mini-stats__item" id="stat-platform">최다: -</span>
@@ -206,28 +209,28 @@
   <!-- ⑥ 하단 버튼 영역 -->
   <footer class="popup-footer">
     <div class="popup-footer__left">
-      <button class="btn-ghost footer-btn" id="btn-backup" title="백업">
+      <button class="btn-ghost footer-btn" id="btn-backup" data-i18n-title="popup_footer_backup" title="백업">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
           <path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2"/>
           <polyline points="5,8 8,11 11,8"/>
           <line x1="8" y1="3" x2="8" y2="11"/>
         </svg>
-        <span>백업</span>
+        <span data-i18n="popup_footer_backup">백업</span>
       </button>
-      <button class="btn-ghost footer-btn" id="btn-restore" title="복원">
+      <button class="btn-ghost footer-btn" id="btn-restore" data-i18n-title="popup_footer_restore" title="복원">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
           <path d="M2 5v-2a1 1 0 011-1h10a1 1 0 011 1v2"/>
           <polyline points="5,8 8,5 11,8"/>
           <line x1="8" y1="5" x2="8" y2="13"/>
         </svg>
-        <span>복원</span>
+        <span data-i18n="popup_footer_restore">복원</span>
       </button>
-      <button class="btn-ghost footer-btn" id="btn-settings" title="설정">
+      <button class="btn-ghost footer-btn" id="btn-settings" data-i18n-title="popup_footer_settings" title="설정">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
           <circle cx="8" cy="8" r="2.5"/>
           <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/>
         </svg>
-        <span>설정</span>
+        <span data-i18n="popup_footer_settings">설정</span>
       </button>
     </div>
     <div class="popup-footer__right">
@@ -236,9 +239,9 @@
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
           <polygon points="8,2 9.8,6.2 14.5,6.7 11,9.9 12.1,14.5 8,12 3.9,14.5 5,9.9 1.5,6.7 6.2,6.2"/>
         </svg>
-        Pro 업그레이드
+        <span data-i18n="popup_footer_upgrade">Pro 업그레이드</span>
       </button>
-      <span class="pro-badge" id="pro-badge" hidden aria-label="Pro 구독 활성">PRO</span>
+      <span class="pro-badge" id="pro-badge" hidden data-i18n-aria="popup_footer_pro_badge_aria" aria-label="Pro 구독 활성" data-i18n="common_pro">PRO</span>
     </div>
   </footer>
 
@@ -250,27 +253,29 @@
 
   <!-- MD 복사 한도 말풍선 (AC-13) -->
   <div id="md-limit-tooltip" class="limit-tooltip" hidden role="tooltip">
-    <p>이번 달 복사 한도(20회)를 사용했어요</p>
-    <button class="limit-tooltip__upgrade" id="btn-md-upgrade">Pro 업그레이드</button>
+    <p data-i18n="popup_md_limit_text">이번 달 복사 한도(20회)를 사용했어요</p>
+    <button class="limit-tooltip__upgrade" id="btn-md-upgrade" data-i18n="popup_md_limit_upgrade">Pro 업그레이드</button>
   </div>
 
   <!-- 커스텀 태그 한도 말풍선 (AC-9) -->
   <div id="tag-limit-tooltip" class="limit-tooltip" hidden role="tooltip">
-    <p>커스텀 태그는 Pro 기능이에요</p>
-    <button class="limit-tooltip__upgrade" id="btn-tag-upgrade">Pro 업그레이드</button>
+    <p data-i18n="popup_tag_limit_text">커스텀 태그는 Pro 기능이에요</p>
+    <button class="limit-tooltip__upgrade" id="btn-tag-upgrade" data-i18n="popup_tag_limit_upgrade">Pro 업그레이드</button>
   </div>
 
   <!-- 모달: 복원 파일 에러 -->
   <div id="modal-overlay" class="modal-overlay" hidden>
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <h2 id="modal-title" class="modal__title">파일을 읽을 수 없어요</h2>
-      <p class="modal__body" id="modal-body">Nugget JSON 백업 파일인지 확인해 주세요.</p>
+      <h2 id="modal-title" class="modal__title" data-i18n="popup_modal_file_error_title">파일을 읽을 수 없어요</h2>
+      <p class="modal__body" id="modal-body" data-i18n="popup_modal_file_error_body">Nugget JSON 백업 파일인지 확인해 주세요.</p>
       <div class="modal__actions">
-        <button class="btn-primary" id="btn-modal-close">확인</button>
+        <button class="btn-primary" id="btn-modal-close" data-i18n="popup_modal_confirm">확인</button>
       </div>
     </div>
   </div>
 
+  <script src="../utils/i18n.js"></script>
+  <script src="../utils/theme.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

@@ -13,15 +13,15 @@
     <!-- 히어로 영역 -->
     <header class="hero">
       <div class="hero__icon" aria-hidden="true">🥜</div>
-      <h1 class="hero__title">Nugget에 오신 것을 환영해요!</h1>
-      <p class="hero__subtitle">AI 대화를 자동으로 저장하고 나중에 쉽게 찾아보세요</p>
+      <h1 class="hero__title" data-i18n="onboarding_title">Nugget에 오신 것을 환영해요!</h1>
+      <p class="hero__subtitle" data-i18n="onboarding_subtitle">AI 대화를 자동으로 저장하고 나중에 쉽게 찾아보세요</p>
     </header>
 
     <!-- ① 자동 저장 안내 -->
     <section class="feature-section" aria-label="자동 저장">
       <div class="feature-header">
         <span class="feature-number" aria-hidden="true">①</span>
-        <h2 class="feature-title">자동 저장</h2>
+        <h2 class="feature-title" data-i18n="onboarding_feature1_title">자동 저장</h2>
       </div>
 
       <!-- 샘플 카드 (AC-21) — 실제 카드 UI와 동일한 스타일 -->
@@ -30,19 +30,19 @@
         <div class="sample-card__content">
           <div class="sample-card__header">
             <span class="platform-avatar platform-avatar--claude" aria-label="Claude">C</span>
-            <span class="sample-card__platform">Claude</span>
-            <span class="sample-card__date">오늘 14:30</span>
+            <span class="sample-card__platform" data-i18n="onboarding_sample_platform">Claude</span>
+            <span class="sample-card__date" data-i18n="onboarding_sample_date">오늘 14:30</span>
           </div>
           <p class="sample-card__question">
             <span class="sample-card__q-label" aria-hidden="true">Q</span>
-            React에서 상태관리 어떻게 하나요?
+            <span data-i18n="onboarding_sample_question">React에서 상태관리 어떻게 하나요?</span>
           </p>
-          <p class="sample-card__answer">
+          <p class="sample-card__answer" data-i18n="onboarding_sample_answer">
             React에서 상태를 관리하는 방법은 여러 가지가 있습니다. useState는 컴포넌트 내부 상태를, useReducer는 복잡한 상태 로직을 관리하는 데 쓰입니다...
           </p>
           <div class="sample-card__meta">
-            <span class="tag-chip tag-chip--코딩">코딩</span>
-            <span class="tag-chip tag-chip--학습">학습</span>
+            <span class="tag-chip tag-chip--코딩" data-i18n="popup_filter_tag_coding">코딩</span>
+            <span class="tag-chip tag-chip--학습" data-i18n="popup_filter_tag_study">학습</span>
             <span class="sample-card__star" aria-hidden="true">
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
                 <polygon points="8,2 10,6 14,6.5 11,9.5 12,14 8,11.5 4,14 5,9.5 2,6.5 6,6"/>
@@ -53,7 +53,7 @@
         </div>
       </div>
 
-      <p class="feature-desc">
+      <p class="feature-desc" data-i18n="onboarding_feature1_desc">
         Claude, ChatGPT, Gemini에서의 대화가 자동으로 저장돼요.
         확장 프로그램이 알아서 챙기니까 신경 쓸 필요 없어요.
       </p>
@@ -63,9 +63,9 @@
     <section class="feature-section" aria-label="자동 정리">
       <div class="feature-header">
         <span class="feature-number" aria-hidden="true">②</span>
-        <h2 class="feature-title">똑똑한 정리</h2>
+        <h2 class="feature-title" data-i18n="onboarding_feature2_title">똑똑한 정리</h2>
       </div>
-      <p class="feature-desc">
+      <p class="feature-desc" data-i18n="onboarding_feature2_desc">
         자동 태그 (#코딩, #글쓰기, #업무 등)와 잡담 필터로
         중요한 대화만 모아줘요. 인사말이나 짧은 잡담은 따로 분류돼요.
       </p>
@@ -82,9 +82,9 @@
     <section class="feature-section" aria-label="검색">
       <div class="feature-header">
         <span class="feature-number" aria-hidden="true">③</span>
-        <h2 class="feature-title">빠른 검색</h2>
+        <h2 class="feature-title" data-i18n="onboarding_feature3_title">빠른 검색</h2>
       </div>
-      <p class="feature-desc">
+      <p class="feature-desc" data-i18n="onboarding_feature3_desc">
         키워드, 플랫폼, 날짜, 태그로 원하는 대화를 바로 찾아요.
         검색어는 노란색으로 하이라이팅되어 한눈에 보여요.
       </p>
@@ -94,7 +94,7 @@
             <circle cx="6.5" cy="6.5" r="4.5"/>
             <line x1="10.5" y1="10.5" x2="14" y2="14"/>
           </svg>
-          <span>React 상태관리</span>
+          <span data-i18n="onboarding_search_demo_query">React 상태관리</span>
         </div>
         <p class="search-demo__result">
           <mark class="search-highlight">React</mark>에서 <mark class="search-highlight">상태</mark>를 관리하는 방법은...
@@ -106,9 +106,9 @@
     <section class="feature-section" aria-label="단축키">
       <div class="feature-header">
         <span class="feature-number" aria-hidden="true">④</span>
-        <h2 class="feature-title">단축키</h2>
+        <h2 class="feature-title" data-i18n="onboarding_feature4_title">단축키</h2>
       </div>
-      <p class="feature-desc">
+      <p class="feature-desc" data-i18n="onboarding_feature4_desc">
         가장 최근 대화에 바로 별표를 달 수 있어요.
         중요한 대화를 나중에 쉽게 찾아보세요.
       </p>
@@ -118,7 +118,7 @@
         <kbd class="key-chip">Shift</kbd>
         <span class="key-plus" aria-hidden="true">+</span>
         <kbd class="key-chip">S</kbd>
-        <span class="shortcut-desc">→ 별표 토글</span>
+        <span class="shortcut-desc" data-i18n="onboarding_shortcut_desc">→ 별표 토글</span>
       </div>
     </section>
 
@@ -126,33 +126,35 @@
     <section class="pro-preview" aria-label="Pro 플랜 소개">
       <div class="pro-preview__inner">
         <div class="pro-preview__header">
-          <span class="pro-badge">PRO</span>
-          <h2 class="pro-preview__title">Pro로 더 많이 활용하세요</h2>
+          <span class="pro-badge" data-i18n="common_pro">PRO</span>
+          <h2 class="pro-preview__title" data-i18n="onboarding_pro_title">Pro로 더 많이 활용하세요</h2>
         </div>
         <ul class="pro-preview__list">
-          <li>무제한 저장 (무료: 500개)</li>
-          <li>커스텀 태그 추가</li>
-          <li>무제한 Markdown 복사</li>
-          <li>PDF / Markdown 파일 내보내기</li>
+          <li data-i18n="onboarding_pro_feature1">무제한 저장 (무료: 500개)</li>
+          <li data-i18n="onboarding_pro_feature2">커스텀 태그 추가</li>
+          <li data-i18n="onboarding_pro_feature3">무제한 Markdown 복사</li>
+          <li data-i18n="onboarding_pro_feature4">PDF / Markdown 파일 내보내기</li>
         </ul>
-        <button class="btn-pro-later" id="btn-pro-later">나중에 알아보기</button>
+        <button class="btn-pro-later" id="btn-pro-later" data-i18n="onboarding_pro_later">나중에 알아보기</button>
       </div>
     </section>
 
     <!-- CTA -->
     <div class="cta-area">
       <button class="btn-start" id="btn-start">
-        Nugget 시작하기
+        <span data-i18n="onboarding_cta_start">Nugget 시작하기</span>
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
           <line x1="4" y1="9" x2="14" y2="9"/>
           <polyline points="10,5 14,9 10,13"/>
         </svg>
       </button>
-      <p class="cta-hint">Claude, ChatGPT, Gemini에서 대화를 시작하면 자동으로 저장돼요</p>
+      <p class="cta-hint" data-i18n="onboarding_cta_hint">Claude, ChatGPT, Gemini에서 대화를 시작하면 자동으로 저장돼요</p>
     </div>
 
   </div>
 
+  <script src="../utils/i18n.js"></script>
+  <script src="../utils/theme.js"></script>
   <script src="onboarding.js"></script>
 </body>
 </html>

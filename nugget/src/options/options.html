@@ -13,7 +13,7 @@
     <!-- 헤더 -->
     <header class="options-header">
       <span class="options-header__icon" aria-hidden="true">🥜</span>
-      <h1 class="options-header__title">Nugget 설정</h1>
+      <h1 class="options-header__title" data-i18n="options_header_title">Nugget 설정</h1>
     </header>
 
     <!-- Pro 오프라인 배너 (AC-24a) -->
@@ -23,20 +23,91 @@
         <line x1="8" y1="7" x2="8" y2="10"/>
         <circle cx="8" cy="12" r="0.5" fill="currentColor" stroke="none"/>
       </svg>
-      구독 확인이 필요해요. 인터넷 연결 시 자동으로 확인됩니다.
+      <span data-i18n="options_pro_verify_banner">구독 확인이 필요해요. 인터넷 연결 시 자동으로 확인됩니다.</span>
     </div>
 
     <!-- ① 일반 설정 -->
-    <section class="settings-section" aria-label="일반 설정">
-      <h2 class="settings-section__title">일반 설정</h2>
+    <section class="settings-section" data-i18n-aria="options_general_title" aria-label="일반 설정">
+      <h2 class="settings-section__title" data-i18n="options_general_title">일반 설정</h2>
       <div class="settings-card">
+
+        <!-- [v1.1] 언어 선택 -->
+        <div class="settings-row" id="row-language">
+          <div class="settings-row__label">
+            <span class="settings-row__title">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true" style="vertical-align:-3px;margin-right:4px;">
+                <circle cx="8" cy="8" r="6.5"/>
+                <path d="M8 1.5C8 1.5 5 5 5 8s3 6.5 3 6.5M8 1.5C8 1.5 11 5 11 8s-3 6.5-3 6.5M1.5 8h13"/>
+              </svg>
+              <span data-i18n="options_general_language">언어</span>
+              <span class="setting-label__sub">(Language)</span>
+            </span>
+          </div>
+          <div class="settings-row__right" style="display:flex;align-items:center;gap:8px;">
+            <div class="language-select-wrap">
+              <select id="select-language" class="language-select" aria-label="언어 선택">
+                <option value="auto" data-i18n="settings_lang_auto">자동 (브라우저 언어)</option>
+                <option value="ko">한국어</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+            <span class="setting-saved-indicator" id="lang-saved-indicator" aria-live="polite">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="2,7 5,10 12,3"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <div class="settings-divider" aria-hidden="true"></div>
+
+        <!-- [v1.1] 테마 선택 -->
+        <div class="settings-row" id="row-theme">
+          <div class="settings-row__label">
+            <span class="settings-row__title">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true" style="vertical-align:-3px;margin-right:4px;">
+                <circle cx="8" cy="8" r="3"/>
+                <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/>
+              </svg>
+              <span data-i18n="options_general_theme">테마</span>
+              <span class="setting-label__sub">(Theme)</span>
+            </span>
+          </div>
+          <div class="settings-row__right" style="display:flex;align-items:center;gap:8px;">
+            <div class="theme-selector" role="group" aria-label="테마 선택">
+              <button class="theme-selector__btn" id="btn-theme-light" data-theme-value="light" aria-pressed="false">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+                  <circle cx="7" cy="7" r="3"/>
+                  <path d="M7 1v2M7 11v2M1 7h2M11 7h2M2.64 2.64l1.41 1.41M10 10l1.41 1.41M2.64 11.36l1.41-1.41M10 4l1.41-1.41"/>
+                </svg>
+                <span data-i18n="theme_light">라이트</span>
+              </button>
+              <button class="theme-selector__btn" id="btn-theme-dark" data-theme-value="dark" aria-pressed="false">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+                  <path d="M12.5 9.5A6 6 0 014.5 1.5a6 6 0 108 8z"/>
+                </svg>
+                <span data-i18n="theme_dark">다크</span>
+              </button>
+              <button class="theme-selector__btn" id="btn-theme-system" data-theme-value="system" aria-pressed="false">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+                  <rect x="1" y="2" width="12" height="8" rx="1"/>
+                  <path d="M5 12h4M7 10v2"/>
+                </svg>
+                <span data-i18n="theme_system">시스템</span>
+              </button>
+            </div>
+            <span class="setting-saved-indicator" id="theme-saved-indicator" aria-live="polite">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="2,7 5,10 12,3"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <div class="settings-divider" aria-hidden="true"></div>
 
         <div class="settings-row">
           <div class="settings-row__label">
-            <span class="settings-row__title">토스트 알림</span>
-            <span class="settings-row__desc">대화 저장 시 화면에 알림 표시</span>
+            <span class="settings-row__title" data-i18n="options_general_toast">토스트 알림</span>
+            <span class="settings-row__desc" data-i18n="options_general_toast_desc">대화 저장 시 화면에 알림 표시</span>
           </div>
-          <label class="toggle-switch" aria-label="토스트 알림 켜기/끄기">
+          <label class="toggle-switch" data-i18n-aria="options_general_toast_aria" aria-label="토스트 알림 켜기/끄기">
             <input type="checkbox" id="toggle-toast" role="switch" />
             <span class="toggle-switch__track"></span>
           </label>
@@ -46,10 +117,10 @@
 
         <div class="settings-row">
           <div class="settings-row__label">
-            <span class="settings-row__title">잡담 필터</span>
-            <span class="settings-row__desc">짧은 인사말 등 잡담을 자동으로 분류</span>
+            <span class="settings-row__title" data-i18n="options_general_junk_filter">잡담 필터</span>
+            <span class="settings-row__desc" data-i18n="options_general_junk_filter_desc">짧은 인사말 등 잡담을 자동으로 분류</span>
           </div>
-          <label class="toggle-switch" aria-label="잡담 필터 켜기/끄기">
+          <label class="toggle-switch" data-i18n-aria="options_general_junk_filter_aria" aria-label="잡담 필터 켜기/끄기">
             <input type="checkbox" id="toggle-junk-filter" role="switch" />
             <span class="toggle-switch__track"></span>
           </label>
@@ -59,12 +130,12 @@
 
         <div class="settings-row">
           <div class="settings-row__label">
-            <span class="settings-row__title">단축키</span>
-            <span class="settings-row__desc">가장 최근 대화에 별표 토글</span>
+            <span class="settings-row__title" data-i18n="options_general_shortcut">단축키</span>
+            <span class="settings-row__desc" data-i18n="options_general_shortcut_desc">가장 최근 대화에 별표 토글</span>
           </div>
           <div class="settings-row__right">
             <kbd class="shortcut-chip" id="shortcut-display">Ctrl+Shift+S</kbd>
-            <button class="btn-text-link" id="btn-change-shortcut" title="단축키 변경">변경</button>
+            <button class="btn-text-link" id="btn-change-shortcut" data-i18n-title="options_general_shortcut_change" title="단축키 변경" data-i18n="options_general_shortcut_change">변경</button>
           </div>
         </div>
 
@@ -72,10 +143,10 @@
     </section>
 
     <!-- ② 잡담 키워드 관리 (AC-6) -->
-    <section class="settings-section" aria-label="잡담 키워드 관리">
-      <h2 class="settings-section__title">잡담 키워드 관리</h2>
+    <section class="settings-section" data-i18n-aria="options_keywords_title" aria-label="잡담 키워드 관리">
+      <h2 class="settings-section__title" data-i18n="options_keywords_title">잡담 키워드 관리</h2>
       <div class="settings-card">
-        <div class="keywords-container" id="keywords-container" aria-label="잡담 키워드 목록">
+        <div class="keywords-container" id="keywords-container" data-i18n-aria="options_keywords_container_aria" aria-label="잡담 키워드 목록">
           <!-- 키워드 칩들이 여기에 동적 렌더링 -->
         </div>
         <div class="keywords-add-row">
@@ -87,13 +158,14 @@
             maxlength="30"
             aria-label="새 잡담 키워드"
             hidden
+            data-i18n-placeholder="options_keywords_add_placeholder"
           />
           <button class="btn-add-keyword" id="btn-add-keyword" aria-label="키워드 추가">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
               <line x1="7" y1="2" x2="7" y2="12"/>
               <line x1="2" y1="7" x2="12" y2="7"/>
             </svg>
-            추가
+            <span data-i18n="options_keywords_add_btn">추가</span>
           </button>
         </div>
         <p class="settings-hint">
@@ -102,19 +174,19 @@
             <line x1="7" y1="5" x2="7" y2="7"/>
             <circle cx="7" cy="9.5" r="0.5" fill="currentColor" stroke="none"/>
           </svg>
-          여기 있는 단어와 정확히 일치하는 질문은 잡담으로 분류돼요
+          <span data-i18n="options_keywords_hint">여기 있는 단어와 정확히 일치하는 질문은 잡담으로 분류돼요</span>
         </p>
       </div>
     </section>
 
     <!-- ③ 데이터 관리 (AC-17, AC-18) -->
-    <section class="settings-section" aria-label="데이터 관리">
-      <h2 class="settings-section__title">데이터 관리</h2>
+    <section class="settings-section" data-i18n-aria="options_data_title" aria-label="데이터 관리">
+      <h2 class="settings-section__title" data-i18n="options_data_title">데이터 관리</h2>
       <div class="settings-card">
         <!-- 저장 현황 -->
         <div class="storage-info">
           <div class="storage-info__header">
-            <span class="storage-info__count" id="storage-count">저장된 대화: - / 500개</span>
+            <span class="storage-info__count" id="storage-count" data-i18n="options_data_storage_count">저장된 대화: - / 500개</span>
             <span class="storage-info__percent" id="storage-percent">0%</span>
           </div>
           <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="storage-progress-bar">
@@ -130,7 +202,7 @@
               <polyline points="5,8 8,11 11,8"/>
               <line x1="8" y1="3" x2="8" y2="11"/>
             </svg>
-            백업 (JSON)
+            <span data-i18n="options_data_backup">백업 (JSON)</span>
           </button>
           <button class="btn-secondary" id="btn-import-json">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
@@ -138,7 +210,7 @@
               <polyline points="5,8 8,5 11,8"/>
               <line x1="8" y1="5" x2="8" y2="13"/>
             </svg>
-            복원
+            <span data-i18n="options_data_restore">복원</span>
           </button>
         </div>
 
@@ -146,21 +218,21 @@
         <div class="pro-export-row">
           <span class="pro-label">Pro</span>
           <button class="btn-secondary btn-secondary--pro" id="btn-export-md" disabled>
-            Markdown 내보내기
+            <span data-i18n="options_data_export_md">Markdown 내보내기</span>
           </button>
           <button class="btn-secondary btn-secondary--pro" id="btn-export-pdf" disabled>
-            PDF 내보내기
+            <span data-i18n="options_data_export_pdf">PDF 내보내기</span>
           </button>
         </div>
       </div>
     </section>
 
     <!-- ④ Pro 구독 (AC-22) -->
-    <section class="settings-section" aria-label="Pro 구독">
-      <h2 class="settings-section__title">Pro 구독</h2>
+    <section class="settings-section" data-i18n-aria="options_pro_title" aria-label="Pro 구독">
+      <h2 class="settings-section__title" data-i18n="options_pro_title">Pro 구독</h2>
       <div class="settings-card pro-card">
         <div class="pro-status" id="pro-status">
-          <span class="pro-status__plan" id="pro-plan-label">현재: 무료 플랜</span>
+          <span class="pro-status__plan" id="pro-plan-label" data-i18n="options_pro_plan_free">현재: 무료 플랜</span>
         </div>
         <!-- 무료 사용자에게 표시 -->
         <div id="upgrade-section">
@@ -168,24 +240,24 @@
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
               <polygon points="8,2 9.8,6.2 14.5,6.7 11,9.9 12.1,14.5 8,12 3.9,14.5 5,9.9 1.5,6.7 6.2,6.2"/>
             </svg>
-            Pro로 업그레이드
+            <span data-i18n="options_pro_upgrade_btn">Pro로 업그레이드</span>
           </button>
           <ul class="pro-benefits">
             <li class="pro-benefit-item">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="var(--color-pro)" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="2,7 5,10 12,3"/></svg>
-              무제한 저장
+              <span data-i18n="options_pro_benefit_storage">무제한 저장</span>
             </li>
             <li class="pro-benefit-item">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="var(--color-pro)" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="2,7 5,10 12,3"/></svg>
-              커스텀 태그
+              <span data-i18n="options_pro_benefit_tags">커스텀 태그</span>
             </li>
             <li class="pro-benefit-item">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="var(--color-pro)" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="2,7 5,10 12,3"/></svg>
-              무제한 MD 복사
+              <span data-i18n="options_pro_benefit_md">무제한 MD 복사</span>
             </li>
             <li class="pro-benefit-item">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="var(--color-pro)" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="2,7 5,10 12,3"/></svg>
-              PDF / Markdown 내보내기
+              <span data-i18n="options_pro_benefit_export">PDF / Markdown 내보내기</span>
             </li>
           </ul>
         </div>
@@ -193,7 +265,7 @@
         <div id="pro-active-section" hidden>
           <p class="pro-active-msg">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--color-pro)" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="3,8 6,12 13,4"/></svg>
-            Pro 구독이 활성 상태예요. 모든 기능을 제한 없이 사용할 수 있어요.
+            <span data-i18n="options_pro_active_msg">Pro 구독이 활성 상태예요. 모든 기능을 제한 없이 사용할 수 있어요.</span>
           </p>
         </div>
       </div>
@@ -201,7 +273,7 @@
 
     <!-- 버전 정보 -->
     <footer class="options-footer">
-      <span id="version-info">Nugget v1.0.0</span>
+      <span id="version-info">Nugget v1.1.0</span>
     </footer>
 
   </div>
@@ -215,14 +287,16 @@
   <!-- 모달: 파일 에러 -->
   <div id="modal-overlay" class="modal-overlay" hidden>
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <h2 id="modal-title" class="modal__title">파일을 읽을 수 없어요</h2>
-      <p class="modal__body" id="modal-body">Nugget JSON 백업 파일인지 확인해 주세요.</p>
+      <h2 id="modal-title" class="modal__title" data-i18n="options_modal_file_error_title">파일을 읽을 수 없어요</h2>
+      <p class="modal__body" id="modal-body" data-i18n="options_modal_file_error_body">Nugget JSON 백업 파일인지 확인해 주세요.</p>
       <div class="modal__actions">
-        <button class="btn-primary" id="btn-modal-close">확인</button>
+        <button class="btn-primary" id="btn-modal-close" data-i18n="options_modal_confirm">확인</button>
       </div>
     </div>
   </div>
 
+  <script src="../utils/i18n.js"></script>
+  <script src="../utils/theme.js"></script>
   <script src="options.js"></script>
 </body>
 </html>

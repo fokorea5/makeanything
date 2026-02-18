@@ -48,6 +48,13 @@ const els = {
   toggleJunkFilter: $('toggle-junk-filter'),
   shortcutDisplay: $('shortcut-display'),
   btnChangeShortcut: $('btn-change-shortcut'),
+  // [v1.1] 언어/테마 설정
+  selectLanguage: $('select-language'),
+  langSavedIndicator: $('lang-saved-indicator'),
+  btnThemeLight: $('btn-theme-light'),
+  btnThemeDark: $('btn-theme-dark'),
+  btnThemeSystem: $('btn-theme-system'),
+  themeSavedIndicator: $('theme-saved-indicator'),
   keywordsContainer: $('keywords-container'),
   keywordInput: $('keyword-input'),
   btnAddKeyword: $('btn-add-keyword'),
@@ -85,10 +92,24 @@ async function sendMsg(type, payload = {}) {
 }
 
 // =============================================
+// [v1.1] i18n / 테마 초기화
+// =============================================
+
+function initI18nAndTheme() {
+  if (typeof applyTheme === 'function') {
+    applyTheme();
+  }
+  if (typeof initI18n === 'function') {
+    initI18n();
+  }
+}
+
+// =============================================
 // 초기화
 // =============================================
 
 async function init() {
+  initI18nAndTheme();
   bindEvents();
   await loadAll();
 }
@@ -140,6 +161,43 @@ function applySettings() {
   els.toggleToast.checked = !!state.settings.toastEnabled;
   els.toggleJunkFilter.checked = !!state.settings.junkFilterEnabled;
   els.shortcutDisplay.textContent = state.settings.shortcutKey || 'Ctrl+Shift+S';
+
+  // [v1.1] 언어 설정 UI 동기화
+  if (els.selectLanguage) {
+    const lang = state.settings.language || 'auto';
+    els.selectLanguage.value = lang;
+  }
+
+  // [v1.1] 테마 설정 UI 동기화
+  const theme = state.settings.theme || 'system';
+  updateThemeButtons(theme);
+}
+
+// =============================================
+// [v1.1] 테마 버튼 UI 업데이트
+// =============================================
+
+function updateThemeButtons(activeTheme) {
+  const buttons = [els.btnThemeLight, els.btnThemeDark, els.btnThemeSystem];
+  buttons.forEach(btn => {
+    if (!btn) return;
+    const val = btn.getAttribute('data-theme-value');
+    const isActive = val === activeTheme;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  });
+}
+
+// =============================================
+// [v1.1] 저장 완료 인디케이터 표시
+// =============================================
+
+function showSavedIndicator(indicatorEl) {
+  if (!indicatorEl) return;
+  indicatorEl.classList.add('visible');
+  setTimeout(() => {
+    indicatorEl.classList.remove('visible');
+  }, 500);
 }
 
 // =============================================
@@ -152,6 +210,50 @@ async function saveSetting(key, value) {
     // 저장 완료 시각적 피드백 (ui_design.md 5.4)
     showToast('설정이 저장됐어요', 'success');
   }
+}
+
+// =============================================
+// [v1.1] 언어 변경 핸들러
+// =============================================
+
+async function handleLanguageChange() {
+  const lang = els.selectLanguage.value;
+
+  // 즉시 i18n 재적용
+  if (typeof setLanguage === 'function') {
+    setLanguage(lang);
+  } else if (typeof initI18n === 'function') {
+    initI18n(lang);
+  }
+
+  // 저장 완료 인디케이터 표시
+  showSavedIndicator(els.langSavedIndicator);
+
+  // chrome.storage에 저장
+  await sendMsg(MSG.UPDATE_SETTINGS, { key: 'language', value: lang });
+}
+
+// =============================================
+// [v1.1] 테마 변경 핸들러
+// =============================================
+
+async function handleThemeChange(e) {
+  const themeValue = e.currentTarget.getAttribute('data-theme-value');
+  if (!themeValue) return;
+
+  // 즉시 테마 적용
+  if (typeof applyTheme === 'function') {
+    applyTheme(themeValue);
+  }
+
+  // 버튼 UI 업데이트
+  updateThemeButtons(themeValue);
+
+  // 저장 완료 인디케이터 표시
+  showSavedIndicator(els.themeSavedIndicator);
+
+  // chrome.storage에 저장
+  await sendMsg(MSG.UPDATE_SETTINGS, { key: 'theme', value: themeValue });
 }
 
 // =============================================
@@ -476,6 +578,16 @@ function closeModal() {
 // =============================================
 
 function bindEvents() {
+  // [v1.1] 언어 변경
+  if (els.selectLanguage) {
+    els.selectLanguage.addEventListener('change', handleLanguageChange);
+  }
+
+  // [v1.1] 테마 변경 버튼들
+  [els.btnThemeLight, els.btnThemeDark, els.btnThemeSystem].forEach(btn => {
+    if (btn) btn.addEventListener('click', handleThemeChange);
+  });
+
   // 토스트 알림 토글 (AC-27)
   els.toggleToast.addEventListener('change', () => {
     saveSetting('toastEnabled', els.toggleToast.checked);

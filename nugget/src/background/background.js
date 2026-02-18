@@ -206,6 +206,23 @@ function _autoTag(question, answer) {
   return matched.length > 0 ? matched : ['기타'];
 }
 
+/**
+ * [v1.1] answer 앞 200자 기반 content 해시 생성 (날짜 독립)
+ * API 캡처 중복 방지용: SAVE_ENTRY와 API_CAPTURE 간 answer 비교
+ * @param {string} question
+ * @param {string} answer
+ * @returns {string} 해시 문자열
+ */
+function _generateContentHash(question, answer) {
+  const input = (question || '').trim() + '|' + (answer || '').trim().substring(0, 200);
+  let hash = 5381;
+  for (let i = 0; i < input.length; i++) {
+    hash = ((hash << 5) + hash) + input.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return 'ch_' + (hash >>> 0).toString(16);
+}
+
 /** URL 프로토콜 검증 — https:만 허용 (javascript: 등 차단) */
 function _sanitizeUrl(url) {
   if (!url || typeof url !== 'string') return '';
@@ -289,10 +306,12 @@ async function handleApiCapture(data) {
   // saveEntry()와 동일 파이프라인 실행
   const result = await saveEntry(data);
 
-  // 저장 성공 시 해시를 nugget_api_capture_hashes에 기록 (AC-V11-4a)
-  if (result.success && result.entry && result.entry.hash) {
+  // 저장 성공 시 content hash를 nugget_api_capture_hashes에 기록 (AC-V11-4a)
+  // content hash = question + answer앞200자 기반 (날짜 독립) → SAVE_ENTRY 중복 비교용
+  if (result.success) {
     try {
-      await recordApiCaptureHash(result.entry.hash);
+      const contentHash = _generateContentHash(data.question || '', data.answer);
+      await recordApiCaptureHash(contentHash);
     } catch (e) {
       console.error('[Nugget] API 캡처 해시 기록 실패:', e);
       // 해시 기록 실패해도 저장은 성공으로 처리
@@ -976,12 +995,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       switch (type) {
         // ── Content Script → Background ──────────────────────
         case 'SAVE_ENTRY': {
-          // [v1.1] API 캡처 해시 중복 체크 (AC-V11-4a)
-          // SAVE_ENTRY 수신 시 먼저 API_CAPTURE로 이미 저장된 해시인지 확인
-          if (payload && payload.question && payload.answer) {
-            const dateString = new Date().toISOString();
-            const checkHash = _generateHash(payload.question, payload.answer, dateString);
-            const isDuplicate = await isDuplicateOfApiCapture(checkHash);
+          // [v1.1] API 캡처 중복 체크 (AC-V11-4a)
+          // API_CAPTURE로 이미 저장된 대화인지 answer 앞 200자 기준 해시로 확인
+          if (payload && payload.answer) {
+            const contentHash = _generateContentHash(payload.question || '', payload.answer);
+            const isDuplicate = await isDuplicateOfApiCapture(contentHash);
             if (isDuplicate) {
               // API_CAPTURE로 이미 저장됨 — 무시 (중복 방지)
               sendResponse({ success: false, error: 'API 캡처 중복' });
@@ -1286,4 +1304,45 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     // 온보딩 페이지 열기 (AC-21)
     chrome.tabs.create({ url: chrome.runtime.getURL('src/onboarding/onboarding.html') });
   }
+
+  // [v1.1] 원격 셀렉터 알람 등록 (AC-V11-6, 14.4)
+  // 설치/업데이트 시 알람 재등록
+  try {
+    chrome.alarms.create(REMOTE_SELECTORS_ALARM_NAME, {
+      delayInMinutes: 1,         // 설치 후 1분 뒤 최초 실행
+      periodInMinutes: 24 * 60   // 이후 24시간 주기
+    });
+  } catch (e) {
+    console.error('[Nugget] 원격 셀렉터 알람 등록 실패:', e);
+  }
 });
+
+// ============================================================
+// [v1.1] chrome.alarms 리스너 (AC-V11-6)
+// ============================================================
+
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name === REMOTE_SELECTORS_ALARM_NAME) {
+    await fetchRemoteSelectors();
+  }
+});
+
+// ============================================================
+// Service Worker 시작 시 알람 보장 (AC-V11-6, 14.4)
+// ============================================================
+
+// Service Worker는 재시작될 수 있으므로, 시작 시 알람 존재 확인
+(async () => {
+  try {
+    const existingAlarm = await chrome.alarms.get(REMOTE_SELECTORS_ALARM_NAME);
+    if (!existingAlarm) {
+      // 알람이 없으면 재등록
+      chrome.alarms.create(REMOTE_SELECTORS_ALARM_NAME, {
+        delayInMinutes: 1,
+        periodInMinutes: 24 * 60
+      });
+    }
+  } catch (e) {
+    console.debug('[Nugget] Service Worker 시작 시 알람 확인 오류:', e);
+  }
+})();
