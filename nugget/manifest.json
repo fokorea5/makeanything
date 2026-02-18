@@ -1,12 +1,13 @@
 {
   "manifest_version": 3,
   "name": "Nugget – AI Chat Memory",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "AI 대화를 자동 저장하고 나중에 쉽게 찾으세요",
   "permissions": [
     "storage",
     "unlimitedStorage",
-    "activeTab"
+    "activeTab",
+    "alarms"
   ],
   "commands": {
     "toggle-star": {
@@ -36,6 +37,17 @@
   },
   "options_page": "src/options/options.html",
   "content_scripts": [
+    {
+      "matches": ["https://claude.ai/*", "https://chatgpt.com/*", "https://chat.openai.com/*", "https://gemini.google.com/*"],
+      "js": ["src/content/interceptor.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["https://claude.ai/*", "https://chatgpt.com/*", "https://chat.openai.com/*", "https://gemini.google.com/*"],
+      "js": ["src/content/bridge.js"],
+      "run_at": "document_start"
+    },
     {
       "matches": ["https://claude.ai/*"],
       "js": ["src/shared/types.js", "src/config/selectors.js", "src/content/claude.js"],

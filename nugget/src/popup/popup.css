@@ -3,8 +3,13 @@
    ui_design.md 기반 구현
    ============================================= */
 
-/* ---- CSS 변수 (Design Token) ---- */
-:root {
+/* ==============================
+   Nugget v1.1 Theme Variables
+   ============================== */
+
+/* --- Light Theme (default) --- */
+:root,
+[data-theme="light"] {
   /* Brand */
   --nugget-primary: #F5A623;
   --nugget-primary-dark: #D4891A;
@@ -19,10 +24,13 @@
   --bg-primary: #FFFFFF;
   --bg-surface: #F8F9FA;
   --bg-surface-hover: #F1F3F5;
+  --bg-elevated: #FFFFFF;
   --border-default: #E1E4E8;
+  --border-subtle: #F1F3F5;
   --text-primary: #1A1A2E;
   --text-secondary: #6B7280;
   --text-tertiary: #9CA3AF;
+  --text-on-primary: #FFFFFF;
 
   /* State */
   --color-success: #22C55E;
@@ -30,6 +38,44 @@
   --color-error: #EF4444;
   --color-info: #3B82F6;
   --color-pro: #8B5CF6;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.1);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
+
+  /* Overlay */
+  --overlay-bg: rgba(0, 0, 0, 0.4);
+
+  /* Skeleton */
+  --skeleton-base: #F1F3F5;
+  --skeleton-shine: #E1E4E8;
+
+  /* Search highlight */
+  --highlight-search: #FEF08A;
+
+  /* Scrollbar */
+  --scrollbar-thumb: #CCC;
+  --scrollbar-thumb-hover: #AAA;
+
+  /* Tag backgrounds */
+  --tag-coding-bg: rgba(59, 130, 246, 0.1);
+  --tag-coding-text: #3B82F6;
+  --tag-writing-bg: rgba(16, 185, 129, 0.1);
+  --tag-writing-text: #10B981;
+  --tag-work-bg: rgba(245, 158, 11, 0.1);
+  --tag-work-text: #F59E0B;
+  --tag-study-bg: rgba(139, 92, 246, 0.1);
+  --tag-study-text: #8B5CF6;
+  --tag-creative-bg: rgba(236, 72, 153, 0.1);
+  --tag-creative-text: #EC4899;
+  --tag-other-bg: rgba(107, 114, 128, 0.1);
+  --tag-other-text: #6B7280;
+
+  /* Platform chip backgrounds */
+  --chip-claude-bg: rgba(124, 58, 237, 0.1);
+  --chip-chatgpt-bg: rgba(16, 163, 127, 0.1);
+  --chip-gemini-bg: rgba(66, 133, 244, 0.1);
 
   /* Spacing */
   --space-xs: 4px;
@@ -52,14 +98,79 @@
   --font-size-lg: 15px;
   --font-size-xl: 17px;
 
-  /* Shadow */
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow-md: 0 2px 8px rgba(0,0,0,0.1);
-  --shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
-
   /* Transition */
   --transition-fast: 150ms ease;
   --transition-normal: 250ms ease;
+}
+
+/* --- Dark Theme --- */
+[data-theme="dark"] {
+  /* Brand */
+  --nugget-primary: #F5A623;
+  --nugget-primary-dark: #FFB940;
+  --nugget-primary-light: #3D2E1A;
+
+  /* Platform */
+  --color-claude: #9B6BFF;
+  --color-chatgpt: #34D399;
+  --color-gemini: #60A5FA;
+
+  /* System */
+  --bg-primary: #1A1A2E;
+  --bg-surface: #252540;
+  --bg-surface-hover: #2E2E4A;
+  --bg-elevated: #2E2E4A;
+  --border-default: #3A3A5C;
+  --border-subtle: #2E2E4A;
+  --text-primary: #E8E8F0;
+  --text-secondary: #A0A0B8;
+  --text-tertiary: #6B6B85;
+  --text-on-primary: #FFFFFF;
+
+  /* State */
+  --color-success: #34D399;
+  --color-warning: #FBBF24;
+  --color-error: #F87171;
+  --color-info: #60A5FA;
+  --color-pro: #A78BFA;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.4);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.5);
+
+  /* Overlay */
+  --overlay-bg: rgba(0, 0, 0, 0.6);
+
+  /* Skeleton */
+  --skeleton-base: #252540;
+  --skeleton-shine: #3A3A5C;
+
+  /* Search highlight */
+  --highlight-search: #78500A;
+
+  /* Scrollbar */
+  --scrollbar-thumb: #3A3A5C;
+  --scrollbar-thumb-hover: #505070;
+
+  /* Tag backgrounds (15% opacity in dark) */
+  --tag-coding-bg: rgba(96, 165, 250, 0.15);
+  --tag-coding-text: #60A5FA;
+  --tag-writing-bg: rgba(52, 211, 153, 0.15);
+  --tag-writing-text: #34D399;
+  --tag-work-bg: rgba(251, 191, 36, 0.15);
+  --tag-work-text: #FBBF24;
+  --tag-study-bg: rgba(167, 139, 250, 0.15);
+  --tag-study-text: #A78BFA;
+  --tag-creative-bg: rgba(244, 114, 182, 0.15);
+  --tag-creative-text: #F472B6;
+  --tag-other-bg: rgba(156, 163, 175, 0.15);
+  --tag-other-text: #9CA3AF;
+
+  /* Platform chip backgrounds (15% opacity in dark) */
+  --chip-claude-bg: rgba(155, 107, 255, 0.15);
+  --chip-chatgpt-bg: rgba(52, 211, 153, 0.15);
+  --chip-gemini-bg: rgba(96, 165, 250, 0.15);
 }
 
 /* ---- 접근성: 모션 감소 ---- */
@@ -127,7 +238,7 @@ body {
 }
 
 .todays-nugget:hover {
-  background: #ffeec8;
+  filter: brightness(0.97);
 }
 
 .todays-nugget__inner {
@@ -393,19 +504,19 @@ body {
 
 /* 플랫폼 칩 활성 상태 */
 .platform-chip[aria-pressed="true"][data-platform="claude"] {
-  background: rgba(124, 58, 237, 0.1);
+  background: var(--chip-claude-bg);
   border-color: var(--color-claude);
   color: var(--color-claude);
 }
 
 .platform-chip[aria-pressed="true"][data-platform="chatgpt"] {
-  background: rgba(16, 163, 127, 0.1);
+  background: var(--chip-chatgpt-bg);
   border-color: var(--color-chatgpt);
   color: var(--color-chatgpt);
 }
 
 .platform-chip[aria-pressed="true"][data-platform="gemini"] {
-  background: rgba(66, 133, 244, 0.1);
+  background: var(--chip-gemini-bg);
   border-color: var(--color-gemini);
   color: var(--color-gemini);
 }
@@ -567,7 +678,7 @@ body {
 }
 
 .skeleton {
-  background: linear-gradient(90deg, #F1F3F5 25%, #E1E4E8 50%, #F1F3F5 75%);
+  background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-shine) 50%, var(--skeleton-base) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: var(--radius-sm);
@@ -765,12 +876,12 @@ body {
   line-height: 1;
 }
 
-.tag-chip--코딩   { background: rgba(59,130,246,0.1); color: #3B82F6; }
-.tag-chip--글쓰기 { background: rgba(16,185,129,0.1); color: #10B981; }
-.tag-chip--업무   { background: rgba(245,158,11,0.1);  color: #F59E0B; }
-.tag-chip--학습   { background: rgba(139,92,246,0.1);  color: #8B5CF6; }
-.tag-chip--크리에이티브 { background: rgba(236,72,153,0.1); color: #EC4899; }
-.tag-chip--기타   { background: rgba(107,114,128,0.1); color: #6B7280; }
+.tag-chip--코딩   { background: var(--tag-coding-bg);   color: var(--tag-coding-text); }
+.tag-chip--글쓰기 { background: var(--tag-writing-bg);  color: var(--tag-writing-text); }
+.tag-chip--업무   { background: var(--tag-work-bg);     color: var(--tag-work-text); }
+.tag-chip--학습   { background: var(--tag-study-bg);    color: var(--tag-study-text); }
+.tag-chip--크리에이티브 { background: var(--tag-creative-bg); color: var(--tag-creative-text); }
+.tag-chip--기타   { background: var(--tag-other-bg);    color: var(--tag-other-text); }
 
 /* 액션 행 */
 .card__actions {
@@ -825,7 +936,7 @@ body {
    ============================================= */
 
 .highlight {
-  background: #FEF08A;
+  background: var(--highlight-search);
   border-radius: 2px;
   padding: 0 1px;
 }
@@ -1090,7 +1201,7 @@ body {
 .limit-tooltip {
   position: fixed;
   z-index: 300;
-  background: white;
+  background: var(--bg-elevated);
   border: 1px solid rgba(139, 92, 246, 0.3);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
@@ -1128,7 +1239,7 @@ body {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1212,4 +1323,90 @@ body {
   font-size: var(--font-size-sm);
   color: var(--color-warning);
   flex-shrink: 0;
+}
+
+/* =============================================
+   [v1.1] 테마 전환 애니메이션
+   ============================================= */
+
+body,
+.card,
+.search-bar__input,
+.card__note-textarea,
+.filter-dropdown,
+.modal,
+.popup-toast,
+.limit-tooltip {
+  transition: background-color var(--transition-normal),
+              color var(--transition-normal),
+              border-color var(--transition-normal),
+              box-shadow var(--transition-normal);
+}
+
+/* =============================================
+   [v1.1] 다크모드 전용 스타일
+   ============================================= */
+
+/* 다크모드에서 카드는 surface 색상 사용 */
+[data-theme="dark"] .card {
+  background: var(--bg-surface);
+}
+
+[data-theme="dark"] .card:hover {
+  background: var(--bg-surface-hover);
+}
+
+/* 다크모드 버튼 hover — 밝게 */
+[data-theme="dark"] .btn-primary:hover,
+[data-theme="dark"] .btn-pro:hover {
+  filter: brightness(1.1);
+}
+
+[data-theme="dark"] .btn-ghost:hover {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+/* 다크모드 모달 */
+[data-theme="dark"] .modal {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+}
+
+/* 다크모드 icon-btn hover */
+[data-theme="dark"] .icon-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* 다크모드 filter-reset hover */
+[data-theme="dark"] .filter-reset:hover {
+  color: var(--color-info);
+}
+
+/* 다크모드 스크롤바 */
+[data-theme="dark"] .card-list::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+}
+
+[data-theme="dark"] .card-list::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* 다크모드 포커스 링 */
+[data-theme="dark"] *:focus-visible {
+  outline: 2px solid var(--nugget-primary);
+  outline-offset: 2px;
+}
+
+/* 다크모드 에러/경고 배너 배경 조정 */
+[data-theme="dark"] .error-banner {
+  background: rgba(248, 113, 113, 0.1);
+}
+
+[data-theme="dark"] .capacity-banner {
+  background: rgba(251, 191, 36, 0.1);
+}
+
+[data-theme="dark"] .pro-verify-banner {
+  background: rgba(251, 191, 36, 0.08);
 }

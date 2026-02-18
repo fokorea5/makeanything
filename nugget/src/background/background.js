@@ -25,7 +25,7 @@ try {
 }
 
 // ============================================================
-// Storage 키 상수 (DESIGN.md 섹션 8.3)
+// Storage 키 상수 (DESIGN.md 섹션 8.3, 19.3)
 // ============================================================
 const STORAGE_KEYS = {
   ENTRIES: 'nugget_entries',
@@ -33,7 +33,11 @@ const STORAGE_KEYS = {
   JUNK_KEYWORDS: 'nugget_junk_keywords',
   PRO_CACHE: 'nugget_pro_cache',
   TODAYS_NUGGET_DISMISSED: 'nugget_todays_nugget_dismissed',
-  CUSTOM_TAGS: 'nugget_custom_tags'
+  CUSTOM_TAGS: 'nugget_custom_tags',
+  // [v1.1] 원격 셀렉터 캐시 (AC-V11-7)
+  REMOTE_SELECTORS: 'nugget_remote_selectors',
+  // [v1.1] API 캡처 해시 목록 (AC-V11-4a)
+  API_CAPTURE_HASHES: 'nugget_api_capture_hashes'
 };
 
 // ============================================================
@@ -51,7 +55,9 @@ function defaultSettings() {
     maxFreeEntries: 500,
     isPro: false,
     mdCopyCount: 0,
-    mdCopyResetDate: firstOfMonth.toISOString().slice(0, 10)
+    mdCopyResetDate: firstOfMonth.toISOString().slice(0, 10),
+    language: 'auto',   // [v1.1] AC-V11-13: v1.0→v1.1 마이그레이션 자동 적용 (AC-V11-21)
+    theme: 'system'     // [v1.1] AC-V11-17: v1.0→v1.1 마이그레이션 자동 적용 (AC-V11-21)
   };
 }
 
@@ -229,6 +235,141 @@ function _entryToMarkdown(entry) {
   }
   if (url) md += `---\n*출처: ${url}*\n`;
   return md.trim();
+}
+
+// ============================================================
+// [v1.1] API 캡처 해시 관리 (AC-V11-4a)
+// ============================================================
+
+/**
+ * API 캡처 해시 목록 로드
+ * @returns {Promise<string[]>}
+ */
+async function loadApiCaptureHashes() {
+  const result = await storageGet([STORAGE_KEYS.API_CAPTURE_HASHES]);
+  const hashes = result[STORAGE_KEYS.API_CAPTURE_HASHES];
+  return Array.isArray(hashes) ? hashes : [];
+}
+
+/**
+ * API 캡처 해시 기록 (최근 100개까지 유지)
+ * @param {string} hash
+ * @returns {Promise<void>}
+ */
+async function recordApiCaptureHash(hash) {
+  const API_CAPTURE_HASH_MAX = 100;
+  const hashes = await loadApiCaptureHashes();
+  hashes.unshift(hash);
+  // 최근 100개만 유지
+  const trimmed = hashes.slice(0, API_CAPTURE_HASH_MAX);
+  await storageSet({ [STORAGE_KEYS.API_CAPTURE_HASHES]: trimmed });
+}
+
+/**
+ * SAVE_ENTRY 수신 시 API 캡처 해시와 비교하여 중복 여부 확인
+ * @param {string} hash - 생성된 해시
+ * @returns {Promise<boolean>} true이면 중복 (무시해야 함)
+ */
+async function isDuplicateOfApiCapture(hash) {
+  const hashes = await loadApiCaptureHashes();
+  return hashes.includes(hash);
+}
+
+/**
+ * API_CAPTURE 메시지 처리: saveEntry() 파이프라인 실행 + 해시 기록
+ * DESIGN.md 섹션 17.5, AC-V11-4a
+ * @param {{ platform: string, question: string, answer: string, sourceUrl: string }} data
+ * @returns {Promise<{ success: boolean, entry?: NuggetEntry, error?: string }>}
+ */
+async function handleApiCapture(data) {
+  if (!data || !data.platform || !data.answer) {
+    return { success: false, error: 'API_CAPTURE 필수 필드 누락' };
+  }
+
+  // saveEntry()와 동일 파이프라인 실행
+  const result = await saveEntry(data);
+
+  // 저장 성공 시 해시를 nugget_api_capture_hashes에 기록 (AC-V11-4a)
+  if (result.success && result.entry && result.entry.hash) {
+    try {
+      await recordApiCaptureHash(result.entry.hash);
+    } catch (e) {
+      console.error('[Nugget] API 캡처 해시 기록 실패:', e);
+      // 해시 기록 실패해도 저장은 성공으로 처리
+    }
+  }
+
+  return result;
+}
+
+// ============================================================
+// [v1.1] 원격 셀렉터 핫패치 (AC-V11-6 ~ AC-V11-9)
+// ============================================================
+
+// 원격 셀렉터 URL (constants.js의 REMOTE_SELECTORS_URL)
+const REMOTE_SELECTORS_URL = 'https://raw.githubusercontent.com/user/nugget-selectors/main/selectors.json';
+const REMOTE_SELECTORS_ALARM_NAME = 'fetch_remote_selectors';
+
+/**
+ * 원격 셀렉터 JSON 스키마 검증 (AC-V11-9)
+ * @param {Object} data - fetch된 JSON
+ * @returns {boolean}
+ */
+function validateRemoteSelectors(data) {
+  if (!data || typeof data !== 'object') return false;
+  if (typeof data.version !== 'string' || !data.version) return false;
+  if (!data.selectors || typeof data.selectors !== 'object') return false;
+
+  const REQUIRED_KEYS = ['conversationContainer', 'userMessage', 'assistantMessage', 'streamingIndicator'];
+  const platforms = ['claude', 'chatgpt', 'gemini'];
+
+  for (const platform of platforms) {
+    const sel = data.selectors[platform];
+    if (!sel || typeof sel !== 'object') return false;
+    for (const key of REQUIRED_KEYS) {
+      if (typeof sel[key] !== 'string' || !sel[key]) return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * 원격 셀렉터 fetch 및 캐시 (AC-V11-6)
+ * @returns {Promise<void>}
+ */
+async function fetchRemoteSelectors() {
+  try {
+    const response = await fetch(REMOTE_SELECTORS_URL, {
+      cache: 'no-store',
+      headers: { 'Accept': 'application/json' }
+    });
+
+    if (!response.ok) {
+      console.warn(`[Nugget] 원격 셀렉터 fetch 실패: HTTP ${response.status}`);
+      return;
+    }
+
+    const data = await response.json();
+
+    // 스키마 검증 (AC-V11-9)
+    if (!validateRemoteSelectors(data)) {
+      console.warn('[Nugget] 원격 셀렉터 스키마 검증 실패 — 로컬 유지');
+      return;
+    }
+
+    // 검증 통과 시 캐시 저장 (AC-V11-7)
+    const cache = {
+      version: data.version,
+      selectors: data.selectors,
+      fetchedAt: new Date().toISOString()
+    };
+    await storageSet({ [STORAGE_KEYS.REMOTE_SELECTORS]: cache });
+    console.debug(`[Nugget] 원격 셀렉터 갱신 완료: v${data.version}`);
+  } catch (e) {
+    // 오프라인 또는 네트워크 오류 — 로컬 캐시 유지 (AC-V11-7)
+    console.debug('[Nugget] 원격 셀렉터 fetch 오류 (오프라인?):', e);
+  }
 }
 
 // ============================================================
@@ -835,7 +976,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       switch (type) {
         // ── Content Script → Background ──────────────────────
         case 'SAVE_ENTRY': {
+          // [v1.1] API 캡처 해시 중복 체크 (AC-V11-4a)
+          // SAVE_ENTRY 수신 시 먼저 API_CAPTURE로 이미 저장된 해시인지 확인
+          if (payload && payload.question && payload.answer) {
+            const dateString = new Date().toISOString();
+            const checkHash = _generateHash(payload.question, payload.answer, dateString);
+            const isDuplicate = await isDuplicateOfApiCapture(checkHash);
+            if (isDuplicate) {
+              // API_CAPTURE로 이미 저장됨 — 무시 (중복 방지)
+              sendResponse({ success: false, error: 'API 캡처 중복' });
+              break;
+            }
+          }
           const result = await saveEntry(payload);
+          sendResponse(result);
+          break;
+        }
+
+        // [v1.1] API 가로채기 경로 (AC-V11-2, AC-V11-4a)
+        case 'API_CAPTURE': {
+          const result = await handleApiCapture(payload);
           sendResponse(result);
           break;
         }
@@ -929,7 +1089,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         case 'UPDATE_SETTINGS': {
           // 보안: 허용된 설정 키만 변경 가능 (isPro, maxFreeEntries 등은 직접 변경 불가)
-          const ALLOWED_SETTINGS_KEYS = ['toastEnabled', 'junkFilterEnabled', 'shortcutKey'];
+          // [v1.1] language, theme 키 허용 추가 (AC-V11-12, AC-V11-16)
+          const ALLOWED_SETTINGS_KEYS = ['toastEnabled', 'junkFilterEnabled', 'shortcutKey', 'language', 'theme'];
           if (!payload || !payload.key || !ALLOWED_SETTINGS_KEYS.includes(payload.key)) {
             sendResponse({ success: false, error: '허용되지 않은 설정 키' });
             break;

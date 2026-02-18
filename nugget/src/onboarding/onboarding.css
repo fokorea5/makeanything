@@ -3,7 +3,13 @@
    ui_design.md 기반 구현
    ============================================= */
 
-:root {
+/* ==============================
+   Nugget v1.1 Theme Variables
+   ============================== */
+
+/* --- Light Theme (default) --- */
+:root,
+[data-theme="light"] {
   --nugget-primary: #F5A623;
   --nugget-primary-dark: #D4891A;
   --nugget-primary-light: #FFF3DC;
@@ -12,13 +18,27 @@
   --color-gemini: #4285F4;
   --bg-primary: #FFFFFF;
   --bg-surface: #F8F9FA;
+  --bg-elevated: #FFFFFF;
   --border-default: #E1E4E8;
   --text-primary: #1A1A2E;
   --text-secondary: #6B7280;
   --text-tertiary: #9CA3AF;
+  --text-on-primary: #FFFFFF;
   --color-success: #22C55E;
   --color-info: #3B82F6;
   --color-pro: #8B5CF6;
+  --tag-coding-bg: rgba(59, 130, 246, 0.1);
+  --tag-coding-text: #3B82F6;
+  --tag-writing-bg: rgba(16, 185, 129, 0.1);
+  --tag-writing-text: #10B981;
+  --tag-work-bg: rgba(245, 158, 11, 0.1);
+  --tag-work-text: #F59E0B;
+  --tag-study-bg: rgba(139, 92, 246, 0.1);
+  --tag-study-text: #8B5CF6;
+  --tag-creative-bg: rgba(236, 72, 153, 0.1);
+  --tag-creative-text: #EC4899;
+  --tag-other-bg: rgba(107, 114, 128, 0.1);
+  --tag-other-text: #6B7280;
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 12px;
@@ -44,6 +64,42 @@
   --transition-normal: 250ms ease;
 }
 
+/* --- Dark Theme --- */
+[data-theme="dark"] {
+  --nugget-primary: #F5A623;
+  --nugget-primary-dark: #FFB940;
+  --nugget-primary-light: #3D2E1A;
+  --color-claude: #9B6BFF;
+  --color-chatgpt: #34D399;
+  --color-gemini: #60A5FA;
+  --bg-primary: #1A1A2E;
+  --bg-surface: #252540;
+  --bg-elevated: #2E2E4A;
+  --border-default: #3A3A5C;
+  --text-primary: #E8E8F0;
+  --text-secondary: #A0A0B8;
+  --text-tertiary: #6B6B85;
+  --text-on-primary: #FFFFFF;
+  --color-success: #34D399;
+  --color-info: #60A5FA;
+  --color-pro: #A78BFA;
+  --tag-coding-bg: rgba(96, 165, 250, 0.15);
+  --tag-coding-text: #60A5FA;
+  --tag-writing-bg: rgba(52, 211, 153, 0.15);
+  --tag-writing-text: #34D399;
+  --tag-work-bg: rgba(251, 191, 36, 0.15);
+  --tag-work-text: #FBBF24;
+  --tag-study-bg: rgba(167, 139, 250, 0.15);
+  --tag-study-text: #A78BFA;
+  --tag-creative-bg: rgba(244, 114, 182, 0.15);
+  --tag-creative-text: #F472B6;
+  --tag-other-bg: rgba(156, 163, 175, 0.15);
+  --tag-other-text: #9CA3AF;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.4);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.5);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -64,6 +120,11 @@ body {
   background: linear-gradient(160deg, #FFF8EC 0%, #FFFFFF 50%);
   min-height: 100vh;
   padding: var(--space-xl) var(--space-lg);
+  transition: background var(--transition-normal), color var(--transition-normal);
+}
+
+[data-theme="dark"] body {
+  background: var(--bg-primary);
 }
 
 :focus-visible {
@@ -280,12 +341,12 @@ body {
   line-height: 1;
 }
 
-.tag-chip--코딩        { background: rgba(59,130,246,0.1);  color: #3B82F6; }
-.tag-chip--글쓰기      { background: rgba(16,185,129,0.1);  color: #10B981; }
-.tag-chip--업무        { background: rgba(245,158,11,0.1);  color: #F59E0B; }
-.tag-chip--학습        { background: rgba(139,92,246,0.1);  color: #8B5CF6; }
-.tag-chip--크리에이티브 { background: rgba(236,72,153,0.1);  color: #EC4899; }
-.tag-chip--기타        { background: rgba(107,114,128,0.1); color: #6B7280; }
+.tag-chip--코딩        { background: var(--tag-coding-bg);   color: var(--tag-coding-text); }
+.tag-chip--글쓰기      { background: var(--tag-writing-bg);  color: var(--tag-writing-text); }
+.tag-chip--업무        { background: var(--tag-work-bg);     color: var(--tag-work-text); }
+.tag-chip--학습        { background: var(--tag-study-bg);    color: var(--tag-study-text); }
+.tag-chip--크리에이티브 { background: var(--tag-creative-bg); color: var(--tag-creative-text); }
+.tag-chip--기타        { background: var(--tag-other-bg);    color: var(--tag-other-text); }
 
 /* =============================================
    태그 데모
@@ -502,4 +563,22 @@ body {
   color: var(--text-tertiary);
   text-align: center;
   line-height: 1.5;
+}
+
+/* =============================================
+   [v1.1] 다크모드 전용 스타일
+   ============================================= */
+
+[data-theme="dark"] .btn-start:hover {
+  filter: brightness(1.1);
+}
+
+[data-theme="dark"] .sample-card {
+  background: var(--bg-surface);
+  border-color: var(--border-default);
+}
+
+[data-theme="dark"] *:focus-visible {
+  outline: 2px solid var(--nugget-primary);
+  outline-offset: 2px;
 }

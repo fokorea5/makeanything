@@ -3,7 +3,13 @@
    ui_design.md 기반 구현
    ============================================= */
 
-:root {
+/* ==============================
+   Nugget v1.1 Theme Variables
+   ============================== */
+
+/* --- Light Theme (default) --- */
+:root,
+[data-theme="light"] {
   --nugget-primary: #F5A623;
   --nugget-primary-dark: #D4891A;
   --nugget-primary-light: #FFF3DC;
@@ -13,15 +19,21 @@
   --bg-primary: #FFFFFF;
   --bg-surface: #F8F9FA;
   --bg-surface-hover: #F1F3F5;
+  --bg-elevated: #FFFFFF;
   --border-default: #E1E4E8;
+  --border-subtle: #F1F3F5;
   --text-primary: #1A1A2E;
   --text-secondary: #6B7280;
   --text-tertiary: #9CA3AF;
+  --text-on-primary: #FFFFFF;
   --color-success: #22C55E;
   --color-warning: #F59E0B;
   --color-error: #EF4444;
   --color-info: #3B82F6;
   --color-pro: #8B5CF6;
+  --overlay-bg: rgba(0, 0, 0, 0.4);
+  --skeleton-base: #F1F3F5;
+  --skeleton-shine: #E1E4E8;
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 12px;
@@ -43,6 +55,37 @@
   --shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
   --transition-fast: 150ms ease;
   --transition-normal: 250ms ease;
+}
+
+/* --- Dark Theme --- */
+[data-theme="dark"] {
+  --nugget-primary: #F5A623;
+  --nugget-primary-dark: #FFB940;
+  --nugget-primary-light: #3D2E1A;
+  --color-claude: #9B6BFF;
+  --color-chatgpt: #34D399;
+  --color-gemini: #60A5FA;
+  --bg-primary: #1A1A2E;
+  --bg-surface: #252540;
+  --bg-surface-hover: #2E2E4A;
+  --bg-elevated: #2E2E4A;
+  --border-default: #3A3A5C;
+  --border-subtle: #2E2E4A;
+  --text-primary: #E8E8F0;
+  --text-secondary: #A0A0B8;
+  --text-tertiary: #6B6B85;
+  --text-on-primary: #FFFFFF;
+  --color-success: #34D399;
+  --color-warning: #FBBF24;
+  --color-error: #F87171;
+  --color-info: #60A5FA;
+  --color-pro: #A78BFA;
+  --overlay-bg: rgba(0, 0, 0, 0.6);
+  --skeleton-base: #252540;
+  --skeleton-shine: #3A3A5C;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.4);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.5);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -700,4 +743,169 @@ body {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* =============================================
+   [v1.1] 테마 전환 애니메이션
+   ============================================= */
+
+body,
+.settings-card,
+input, textarea, select,
+.modal {
+  transition: background-color var(--transition-normal),
+              color var(--transition-normal),
+              border-color var(--transition-normal);
+}
+
+/* =============================================
+   [v1.1] 다크모드 전용 스타일
+   ============================================= */
+
+[data-theme="dark"] body {
+  background: var(--bg-primary);
+}
+
+[data-theme="dark"] .settings-card {
+  background: var(--bg-surface);
+  border-color: var(--border-default);
+}
+
+[data-theme="dark"] .modal {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+}
+
+[data-theme="dark"] .modal-overlay {
+  background: var(--overlay-bg);
+}
+
+[data-theme="dark"] .btn-primary:hover {
+  filter: brightness(1.1);
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .pro-verify-banner {
+  background: rgba(251, 191, 36, 0.08);
+}
+
+[data-theme="dark"] *:focus-visible {
+  outline: 2px solid var(--nugget-primary);
+  outline-offset: 2px;
+}
+
+/* =============================================
+   [v1.1] 언어/테마 설정 UI (Options 페이지)
+   ============================================= */
+
+/* 언어 선택 드롭다운 래퍼 */
+.language-select-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.language-select-wrap::after {
+  content: '';
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid var(--text-tertiary);
+  pointer-events: none;
+}
+
+.language-select {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 160px;
+  height: 36px;
+  padding: 0 32px 0 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-md);
+  font-family: var(--font-family);
+  color: var(--text-primary);
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--transition-fast), background var(--transition-normal), color var(--transition-normal);
+}
+
+.language-select:focus {
+  border-color: var(--nugget-primary);
+}
+
+/* 테마 세그먼트 버튼 */
+.theme-selector {
+  display: inline-flex;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: border-color var(--transition-normal);
+}
+
+.theme-selector__btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  font-weight: 500;
+  border: none;
+  border-right: 1px solid var(--border-default);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-normal);
+  height: 32px;
+}
+
+.theme-selector__btn:last-child {
+  border-right: none;
+}
+
+.theme-selector__btn.active {
+  background: var(--nugget-primary);
+  color: var(--text-on-primary);
+}
+
+.theme-selector__btn:not(.active):hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.theme-selector__btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* 저장 완료 인디케이터 */
+.setting-saved-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-success);
+  font-size: var(--font-size-xs);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  margin-left: var(--space-sm);
+  white-space: nowrap;
+}
+
+.setting-saved-indicator.visible {
+  opacity: 1;
+}
+
+.setting-saved-indicator--error {
+  color: var(--color-error);
 }
