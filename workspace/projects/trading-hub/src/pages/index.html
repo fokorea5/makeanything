@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trading Hub</title>
+  <link rel="stylesheet" href="/styles/main.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ============================
+       HEADER
+       ============================ -->
+  <header class="header">
+    <div class="header__brand">
+      <div class="header__logo">
+        <span class="header__logo-icon">&#9670;</span>Trading Hub
+      </div>
+    </div>
+    <div class="header__status" id="connectionStatus">
+      <span class="status-dot status-dot--disconnected" id="connectionDot"></span>
+      <span id="connectionText">Disconnected</span>
+    </div>
+  </header>
+
+  <!-- ============================
+       TAB NAV
+       ============================ -->
+  <nav class="tabs" role="tablist">
+    <button class="tab-btn tab-btn--active" data-tab="bots" role="tab" aria-selected="true">
+      <span class="tab-icon">&#9881;</span>
+      <span class="tab-label">Bots</span>
+    </button>
+    <button class="tab-btn" data-tab="assets" role="tab" aria-selected="false">
+      <span class="tab-icon">&#9733;</span>
+      <span class="tab-label">Assets</span>
+    </button>
+    <button class="tab-btn" data-tab="trades" role="tab" aria-selected="false">
+      <span class="tab-icon">&#8644;</span>
+      <span class="tab-label">Trades</span>
+    </button>
+    <button class="tab-btn" data-tab="alerts" role="tab" aria-selected="false">
+      <span class="tab-icon">&#9888;</span>
+      <span class="tab-label">Alerts</span>
+    </button>
+  </nav>
+
+  <!-- ============================
+       TAB: BOTS
+       ============================ -->
+  <section class="tab-content tab-content--active" id="tab-bots" role="tabpanel">
+    <div class="section-header">
+      <h2 class="section-header__title">Bot Management</h2>
+      <button class="btn btn--primary" id="btnAddBot" onclick="App.openAddBotModal()">+ Add Bot</button>
+    </div>
+
+    <!-- Loading state -->
+    <div class="loading-overlay" id="botsLoading">
+      <div class="spinner spinner--lg"></div>
+      <span>Loading bots...</span>
+    </div>
+
+    <!-- Empty state -->
+    <div class="empty-state hidden" id="botsEmpty">
+      <div class="empty-state__icon">&#9881;</div>
+      <div class="empty-state__text">No bots registered yet. Add your first bot!</div>
+      <button class="btn btn--primary" onclick="App.openAddBotModal()">+ Add Bot</button>
+    </div>
+
+    <!-- Bot card grid -->
+    <div class="bot-grid hidden" id="botsGrid"></div>
+  </section>
+
+  <!-- ============================
+       TAB: ASSETS
+       ============================ -->
+  <section class="tab-content" id="tab-assets" role="tabpanel">
+    <div class="section-header">
+      <h2 class="section-header__title">Asset Overview</h2>
+      <button class="btn btn--secondary btn--sm" onclick="App.loadAssets()">Refresh</button>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-overlay" id="assetsLoading">
+      <div class="spinner spinner--lg"></div>
+      <span>Loading assets...</span>
+    </div>
+
+    <div id="assetsContent" class="hidden">
+      <!-- Summary cards -->
+      <div class="summary-cards" id="assetsSummaryCards">
+        <div class="card">
+          <div class="card__title">Total Value (USD)</div>
+          <div class="card__value" id="totalValueUsd">$0</div>
+        </div>
+        <div class="card">
+          <div class="card__title">Active Bots</div>
+          <div class="card__value" id="activeBotCount">0</div>
+        </div>
+        <div class="card">
+          <div class="card__title">Currencies</div>
+          <div class="card__value" id="currencyCount">0</div>
+        </div>
+      </div>
+
+      <!-- Bot assets table -->
+      <div class="table-wrapper mt-2">
+        <table>
+          <thead>
+            <tr>
+              <th>Bot</th>
+              <th>Currency</th>
+              <th class="text-right">Balance</th>
+              <th class="text-right">Locked</th>
+              <th class="text-right">Value (USD)</th>
+              <th>Updated</th>
+            </tr>
+          </thead>
+          <tbody id="assetsTableBody">
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-grid mt-3">
+        <div class="chart-container">
+          <div class="chart-container__title">Asset Distribution</div>
+          <canvas id="chartAssetDistribution"></canvas>
+        </div>
+        <div class="chart-container">
+          <div class="chart-container__title">Daily P&L</div>
+          <canvas id="chartDailyPnl"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================
+       TAB: TRADES
+       ============================ -->
+  <section class="tab-content" id="tab-trades" role="tabpanel">
+    <div class="section-header">
+      <h2 class="section-header__title">Trade History</h2>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar" id="tradesFilters">
+      <div class="form-group">
+        <label for="filterBot">Bot</label>
+        <select class="form-select" id="filterBot">
+          <option value="">All Bots</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="filterSymbol">Symbol</label>
+        <input type="text" class="form-input" id="filterSymbol" placeholder="e.g. BTC/KRW" />
+      </div>
+      <div class="form-group">
+        <label for="filterSide">Side</label>
+        <select class="form-select" id="filterSide">
+          <option value="">All</option>
+          <option value="buy">Buy</option>
+          <option value="sell">Sell</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="filterStartDate">From</label>
+        <input type="date" class="form-input" id="filterStartDate" />
+      </div>
+      <div class="form-group">
+        <label for="filterEndDate">To</label>
+        <input type="date" class="form-input" id="filterEndDate" />
+      </div>
+      <div class="form-group">
+        <button class="btn btn--primary btn--sm" onclick="App.loadTrades(1)">Search</button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-overlay" id="tradesLoading">
+      <div class="spinner spinner--lg"></div>
+      <span>Loading trades...</span>
+    </div>
+
+    <!-- Empty state -->
+    <div class="empty-state hidden" id="tradesEmpty">
+      <div class="empty-state__icon">&#8644;</div>
+      <div class="empty-state__text">No trades found.</div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrapper hidden" id="tradesTableWrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Bot</th>
+            <th>Symbol</th>
+            <th>Side</th>
+            <th class="text-right">Price</th>
+            <th class="text-right">Quantity</th>
+            <th class="text-right">Total</th>
+            <th class="text-right">Fee</th>
+          </tr>
+        </thead>
+        <tbody id="tradesTableBody">
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination hidden" id="tradesPagination"></div>
+  </section>
+
+  <!-- ============================
+       TAB: ALERTS
+       ============================ -->
+  <section class="tab-content" id="tab-alerts" role="tabpanel">
+    <div class="section-header">
+      <h2 class="section-header__title">Alerts</h2>
+      <div class="d-flex gap-1">
+        <button class="btn btn--secondary btn--sm" onclick="App.loadAlerts(1)">Refresh</button>
+        <button class="btn btn--primary btn--sm" id="btnTestAlert" onclick="App.sendTestAlert()">Send Test Alert</button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-overlay" id="alertsLoading">
+      <div class="spinner spinner--lg"></div>
+      <span>Loading alerts...</span>
+    </div>
+
+    <!-- Empty state -->
+    <div class="empty-state hidden" id="alertsEmpty">
+      <div class="empty-state__icon">&#9888;</div>
+      <div class="empty-state__text">No alerts yet.</div>
+    </div>
+
+    <!-- Alert list -->
+    <div id="alertsList" class="hidden"></div>
+
+    <!-- Pagination -->
+    <div class="pagination hidden" id="alertsPagination"></div>
+  </section>
+
+  <!-- ============================
+       MODAL: ADD BOT
+       ============================ -->
+  <div class="modal-overlay" id="addBotModal">
+    <div class="modal">
+      <div class="modal__header">
+        <h3 class="modal__title">Add New Bot</h3>
+        <button class="modal__close" onclick="App.closeAddBotModal()">&times;</button>
+      </div>
+      <div class="modal__body">
+        <div class="form-group">
+          <label for="botName">Bot Name</label>
+          <input type="text" class="form-input" id="botName" placeholder="My Trading Bot" maxlength="100" required />
+        </div>
+        <div class="form-group">
+          <label for="botExchange">Exchange</label>
+          <select class="form-select" id="botExchange">
+            <option value="simulation">Simulation</option>
+            <option value="upbit">Upbit</option>
+            <option value="binance">Binance</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="botType">Bot Type</label>
+          <select class="form-select" id="botType">
+            <option value="custom">Custom</option>
+            <option value="grid">Grid</option>
+            <option value="dca">DCA</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="botSymbol">Symbol</label>
+          <input type="text" class="form-input" id="botSymbol" placeholder="BTC/KRW" value="BTC/KRW" />
+        </div>
+        <div class="form-group">
+          <label for="botStrategy">Strategy</label>
+          <input type="text" class="form-input" id="botStrategy" placeholder="simple_ma" value="simple_ma" />
+        </div>
+        <div class="form-group">
+          <label for="botInterval">Tick Interval (sec)</label>
+          <input type="number" class="form-input" id="botInterval" placeholder="10" value="10" min="1" />
+        </div>
+        <div class="form-group" id="apiKeyGroup">
+          <label for="botApiKey">API Key <small style="color:var(--text-muted)">(optional)</small></label>
+          <input type="password" class="form-input" id="botApiKey" placeholder="Exchange API Key" />
+        </div>
+        <div class="form-group" id="apiSecretGroup">
+          <label for="botApiSecret">API Secret <small style="color:var(--text-muted)">(optional)</small></label>
+          <input type="password" class="form-input" id="botApiSecret" placeholder="Exchange API Secret" />
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--secondary" onclick="App.closeAddBotModal()">Cancel</button>
+        <button class="btn btn--primary" id="btnSubmitBot" onclick="App.createBot()">Create Bot</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================
+       TOAST CONTAINER
+       ============================ -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ============================
+       SCRIPTS
+       ============================ -->
+  <script src="/static/app.js"></script>
+</body>
+</html>
